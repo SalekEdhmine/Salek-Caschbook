@@ -1,0 +1,36 @@
+import 'package:flutter/material.dart';
+
+const Map<String, IconData> categoryIconMap = {
+  'label_outline':        Icons.label_outlined,
+  'shopping_cart':        Icons.shopping_cart_outlined,
+  'restaurant':           Icons.restaurant_outlined,
+  'directions_car':       Icons.directions_car_outlined,
+  'home':                 Icons.home_outlined,
+  'local_hospital':       Icons.local_hospital_outlined,
+  'school':               Icons.school_outlined,
+  'sports_esports':       Icons.sports_esports_outlined,
+  'flight':               Icons.flight_outlined,
+  'attach_money':         Icons.attach_money,
+  'work':                 Icons.work_outline,
+  'savings':              Icons.savings_outlined,
+  'trending_up':          Icons.trending_up,
+  'receipt':              Icons.receipt_outlined,
+  'local_grocery_store':  Icons.local_grocery_store_outlined,
+  'fitness_center':       Icons.fitness_center,
+  'wifi':                 Icons.wifi,
+  'phone':                Icons.phone_outlined,
+  'pets':                 Icons.pets,
+  'coffee':               Icons.coffee_outlined,
+  'category':             Icons.category_outlined,
+  'store':                Icons.store_outlined,
+  'local_taxi':           Icons.local_taxi_outlined,
+  'music_note':           Icons.music_note_outlined,
+  'movie':                Icons.movie_outlined,
+  'hotel':                Icons.hotel_outlined,
+  'electric_bolt':        Icons.electric_bolt_outlined,
+  'water_drop':           Icons.water_drop_outlined,
+  'child_care':           Icons.child_care_outlined,
+  'handyman':             Icons.handyman_outlined,
+};
+
+IconData categoryIcon(String? name) => categoryIconMap[name] ?? Icons.label_outline;
