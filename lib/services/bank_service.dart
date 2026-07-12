@@ -27,8 +27,9 @@ class BankService {
     if (res.statusCode != 200) {
       throw Exception('Banken konnten nicht geladen werden (${res.statusCode})');
     }
-    final data = jsonDecode(res.body) as List;
-    return data.map((e) => BankAspsp.fromMap(e as Map<String, dynamic>)).toList();
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    final list = data['aspsps'] as List? ?? const [];
+    return list.map((e) => BankAspsp.fromMap(e as Map<String, dynamic>)).toList();
   }
 
   Future<String> startConnect({required String aspspName, required String aspspCountry}) async {
