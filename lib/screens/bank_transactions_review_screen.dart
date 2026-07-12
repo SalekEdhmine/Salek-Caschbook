@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/bank_connection.dart';
 import '../models/book.dart';
 import '../models/business.dart';
@@ -57,7 +58,7 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sync fehlgeschlagen: $e'), backgroundColor: Colors.orange),
+          SnackBar(content: Text('${AppStrings.tr('bank_sync_failed')}: $e'), backgroundColor: Colors.orange),
         );
       }
     } finally {
@@ -73,18 +74,18 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.account.name?.isNotEmpty == true ? widget.account.name! : 'Umsätze'),
+        title: Text(widget.account.name?.isNotEmpty == true ? widget.account.name! : AppStrings.tr('bank_transactions_title')),
         actions: [
           IconButton(
             icon: const Icon(Icons.date_range),
-            tooltip: 'Zeitraum',
+            tooltip: AppStrings.tr('bank_period'),
             onPressed: _pickRange,
           ),
           IconButton(
             icon: _syncing
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.refresh),
-            tooltip: 'Aktualisieren (holt neue Umsätze von der Bank)',
+            tooltip: AppStrings.tr('bank_refresh_tooltip'),
             onPressed: _syncing ? null : () => _refresh(args),
           ),
         ],
@@ -93,7 +94,7 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
         SwitchListTile(
           value: _hideImported,
           onChanged: (v) => setState(() => _hideImported = v),
-          title: const Text('Nur neue Umsätze anzeigen'),
+          title: Text(AppStrings.tr('bank_hide_imported')),
           dense: true,
         ),
         const Divider(height: 1),
@@ -106,7 +107,7 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
                   ? transactions.where((t) => !t.alreadyImported).toList()
                   : transactions;
               if (items.isEmpty) {
-                return const Center(child: Text('Keine Umsätze in diesem Zeitraum'));
+                return Center(child: Text(AppStrings.tr('bank_no_transactions')));
               }
               return ListView.separated(
                 itemCount: items.length,
@@ -146,7 +147,7 @@ class _BankTxTile extends StatelessWidget {
     final color = tx.isCredit ? Colors.green : Colors.red;
     final title = tx.counterparty?.isNotEmpty == true
         ? tx.counterparty!
-        : (tx.remittanceInfo?.isNotEmpty == true ? tx.remittanceInfo! : 'Umsatz');
+        : (tx.remittanceInfo?.isNotEmpty == true ? tx.remittanceInfo! : AppStrings.tr('bank_default_title'));
 
     return ListTile(
       leading: CircleAvatar(
@@ -171,8 +172,8 @@ class _BankTxTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           if (tx.alreadyImported)
-            const Chip(
-              label: Text('Importiert', style: TextStyle(fontSize: 11)),
+            Chip(
+              label: Text(AppStrings.tr('bank_imported'), style: const TextStyle(fontSize: 11)),
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             )
@@ -182,7 +183,7 @@ class _BankTxTile extends StatelessWidget {
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10)),
                 onPressed: () => _openImportSheet(context),
-                child: const Text('Importieren', style: TextStyle(fontSize: 12)),
+                child: Text(AppStrings.tr('bank_import'), style: const TextStyle(fontSize: 12)),
               ),
             ),
         ],
@@ -222,7 +223,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
     super.initState();
     _titleCtrl.text = widget.tx.counterparty?.isNotEmpty == true
         ? widget.tx.counterparty!
-        : (widget.tx.remittanceInfo ?? 'Bankumsatz');
+        : (widget.tx.remittanceInfo ?? AppStrings.tr('bank_default_title'));
   }
 
   @override
@@ -242,7 +243,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
       ),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Umsatz importieren', style: Theme.of(context).textTheme.titleMedium),
+          Text(AppStrings.tr('bank_import_sheet_title'), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
             '${widget.tx.isCredit ? '+' : '-'}${formatCurrency(widget.tx.amount)} · ${formatDate(widget.tx.date)}',
@@ -251,7 +252,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _titleCtrl,
-            decoration: const InputDecoration(labelText: 'Bezeichnung', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppStrings.tr('bank_title_label'), border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           businessesAsync.when(
@@ -261,7 +262,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
               _business ??= businesses.firstOrNull;
               return DropdownButtonFormField<Business>(
                 value: _business,
-                decoration: const InputDecoration(labelText: 'Firma / Bereich', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: AppStrings.tr('bank_business_label'), border: const OutlineInputBorder()),
                 items: businesses.map((b) => DropdownMenuItem(value: b, child: Text(b.name))).toList(),
                 onChanged: (b) => setState(() { _business = b; _book = null; }),
               );
@@ -278,7 +279,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
                   _book ??= books.firstOrNull;
                   return DropdownButtonFormField<Book>(
                     value: _book,
-                    decoration: const InputDecoration(labelText: 'Kassenbuch', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: AppStrings.tr('bank_book_label'), border: const OutlineInputBorder()),
                     items: books.map((b) => DropdownMenuItem(value: b, child: Text(b.name))).toList(),
                     onChanged: (b) => setState(() => _book = b),
                   );
@@ -295,7 +296,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
                 final selected = cats.any((c) => c.id == _category?.id) ? _category : null;
                 return DropdownButtonFormField<Category>(
                   value: selected,
-                  decoration: const InputDecoration(labelText: 'Kategorie', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppStrings.tr('bank_category_label'), border: const OutlineInputBorder()),
                   items: cats.map((c) => DropdownMenuItem(value: c, child: Text(c.name))).toList(),
                   onChanged: (c) => setState(() => _category = c),
                 );
@@ -308,7 +309,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
             icon: _saving
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.download_done),
-            label: Text(_saving ? 'Importiere...' : 'Importieren'),
+            label: Text(_saving ? AppStrings.tr('bank_importing') : AppStrings.tr('bank_import')),
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
           ),
         ]),
@@ -323,7 +324,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
       await PbService.instance.insertTransaction(Transaction(
         bookId: _book!.id!,
         categoryId: _category!.id!,
-        title: _titleCtrl.text.trim().isEmpty ? 'Bankumsatz' : _titleCtrl.text.trim(),
+        title: _titleCtrl.text.trim().isEmpty ? AppStrings.tr('bank_default_title') : _titleCtrl.text.trim(),
         amount: widget.tx.amount,
         type: _type,
         date: widget.tx.date,
@@ -338,7 +339,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red),
         );
       }
     }

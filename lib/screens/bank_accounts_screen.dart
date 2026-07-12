@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/bank_connection.dart';
 import '../providers/app_providers.dart';
 import '../services/bank_service.dart';
@@ -40,7 +41,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     final connectionsAsync = ref.watch(bankConnectionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Banken')),
+      appBar: AppBar(title: Text(AppStrings.tr('tab_banks'))),
       body: connectionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(error: e, onRetry: () => ref.invalidate(bankConnectionsProvider)),
@@ -61,7 +62,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openConnect(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Bank verbinden'),
+        label: Text(AppStrings.tr('bank_connect')),
       ),
     );
   }
@@ -84,15 +85,19 @@ class _EmptyView extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.account_balance_outlined, size: 72, color: Colors.grey.shade400),
           const SizedBox(height: 16),
-          Text('Noch keine Bank verbunden', style: Theme.of(context).textTheme.titleMedium),
+          Text(AppStrings.tr('bank_empty_title'), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
-            'Verbinde Santander, Revolut, Klarna oder jedes andere Konto per IBAN, um deine Umsätze hier zu sehen und zu importieren.',
+            AppStrings.tr('bank_empty_body'),
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 20),
-          FilledButton.icon(onPressed: onConnect, icon: const Icon(Icons.add_link), label: const Text('Bank verbinden')),
+          FilledButton.icon(
+            onPressed: onConnect,
+            icon: const Icon(Icons.add_link),
+            label: Text(AppStrings.tr('bank_connect')),
+          ),
         ]),
       ),
     );
@@ -114,7 +119,7 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: 12),
           Text('$error', textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          OutlinedButton(onPressed: onRetry, child: const Text('Erneut versuchen')),
+          OutlinedButton(onPressed: onRetry, child: Text(AppStrings.tr('bank_retry'))),
         ]),
       ),
     );
@@ -149,7 +154,7 @@ class _ConnectionCard extends ConsumerWidget {
             ),
             PopupMenuButton<String>(
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'disconnect', child: Text('Trennen')),
+                PopupMenuItem(value: 'disconnect', child: Text(AppStrings.tr('bank_disconnect'))),
               ],
               onSelected: (v) {
                 if (v == 'disconnect') _confirmDisconnect(context, ref);
@@ -164,7 +169,8 @@ class _ConnectionCard extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Zugriff läuft bald ab (${formatDate(connection.validUntil!)}) – bitte erneut verbinden.',
+                    AppStrings.tr('bank_expiring_soon')
+                        .replaceAll('{date}', formatDate(connection.validUntil!)),
                     style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
                   ),
                 ),
@@ -192,13 +198,13 @@ class _ConnectionCard extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Bank trennen?'),
+        title: Text(AppStrings.tr('bank_disconnect_title')),
         content: Text(
-          'Die Verbindung zu ${connection.aspspName} wird beendet. Bereits importierte Buchungen bleiben erhalten.',
+          AppStrings.tr('bank_disconnect_body').replaceAll('{name}', connection.aspspName),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Trennen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(AppStrings.tr('bank_disconnect'))),
         ],
       ),
     );
@@ -207,7 +213,7 @@ class _ConnectionCard extends ConsumerWidget {
     ref.invalidate(bankConnectionsProvider);
     if (context.mounted && !success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trennen fehlgeschlagen'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppStrings.tr('bank_disconnect_failed')), backgroundColor: Colors.red),
       );
     }
   }
