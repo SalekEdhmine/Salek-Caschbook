@@ -6,6 +6,7 @@ import '../models/business.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../providers/app_providers.dart';
+import '../services/bank_service.dart';
 import '../services/pb_service.dart';
 import '../utils/formatters.dart';
 
@@ -27,6 +28,23 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
   late DateTime _from = DateTime.now().subtract(const Duration(days: 85));
   final DateTime _to = DateTime.now();
   bool _hideImported = true;
+  bool _syncing = false;
+
+  Future<void> _refresh(({String accountUid, DateTime from, DateTime to}) args) async {
+    setState(() => _syncing = true);
+    try {
+      await BankService.instance.triggerSync();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sync fehlgeschlagen: $e'), backgroundColor: Colors.orange),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+    ref.invalidate(bankTransactionsProvider(args));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +61,11 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
             onPressed: _pickRange,
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(bankTransactionsProvider(args)),
+            icon: _syncing
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.refresh),
+            tooltip: 'Aktualisieren (holt neue Umsätze von der Bank)',
+            onPressed: _syncing ? null : () => _refresh(args),
           ),
         ],
       ),

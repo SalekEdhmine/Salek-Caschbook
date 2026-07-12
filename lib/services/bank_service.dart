@@ -71,6 +71,16 @@ class BankService {
     return res.statusCode == 200;
   }
 
+  /// Stößt einen sofortigen Sync aller Bankverbindungen dieses Nutzers an
+  /// (holt neue Umsätze von Enable Banking in den Cache). Läuft zusätzlich
+  /// automatisch alle 6h im Hintergrund auf dem Server.
+  Future<void> triggerSync() async {
+    final res = await http.post(Uri.parse('$_baseUrl/api/banks/sync'), headers: _headers);
+    if (res.statusCode != 200) {
+      throw Exception(_errorMessage(res, 'Sync fehlgeschlagen'));
+    }
+  }
+
   Future<List<BankTransaction>> getTransactions({
     required String accountUid,
     required DateTime from,
