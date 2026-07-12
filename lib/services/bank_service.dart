@@ -19,13 +19,25 @@ class BankService {
         'Authorization': pb.authStore.token,
       };
 
+  /// Extrahiert die eigentliche Fehlermeldung aus der FastAPI-`detail`-Hülle
+  /// (die wiederum oft den rohen Enable-Banking-Fehlertext enthält), damit
+  /// z.B. "Wrong transactions period requested" statt nur "(422)" sichtbar ist.
+  String _errorMessage(http.Response res, String fallback) {
+    try {
+      final body = jsonDecode(res.body);
+      final detail = body is Map ? body['detail'] : null;
+      if (detail is String && detail.isNotEmpty) return '$fallback: $detail';
+    } catch (_) {}
+    return '$fallback (${res.statusCode})';
+  }
+
   Future<List<BankAspsp>> getAspsps({String country = 'DE'}) async {
     final res = await http.get(
       Uri.parse('$_baseUrl/api/banks/aspsps?country=$country'),
       headers: _headers,
     );
     if (res.statusCode != 200) {
-      throw Exception('Banken konnten nicht geladen werden (${res.statusCode})');
+      throw Exception(_errorMessage(res, 'Banken konnten nicht geladen werden'));
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     final list = data['aspsps'] as List? ?? const [];
@@ -39,7 +51,7 @@ class BankService {
       body: jsonEncode({'aspsp_name': aspspName, 'aspsp_country': aspspCountry}),
     );
     if (res.statusCode != 200) {
-      throw Exception('Verbindung konnte nicht gestartet werden (${res.statusCode})');
+      throw Exception(_errorMessage(res, 'Verbindung konnte nicht gestartet werden'));
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     return data['url'] as String;
@@ -48,7 +60,7 @@ class BankService {
   Future<List<BankConnection>> getConnections() async {
     final res = await http.get(Uri.parse('$_baseUrl/api/banks/connections'), headers: _headers);
     if (res.statusCode != 200) {
-      throw Exception('Bankverbindungen konnten nicht geladen werden (${res.statusCode})');
+      throw Exception(_errorMessage(res, 'Bankverbindungen konnten nicht geladen werden'));
     }
     final data = jsonDecode(res.body) as List;
     return data.map((e) => BankConnection.fromMap(e as Map<String, dynamic>)).toList();
@@ -71,7 +83,7 @@ class BankService {
       headers: _headers,
     );
     if (res.statusCode != 200) {
-      throw Exception('Umsätze konnten nicht geladen werden (${res.statusCode})');
+      throw Exception(_errorMessage(res, 'Umsätze konnten nicht geladen werden'));
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     final txs = data['transactions'] as List? ?? const [];

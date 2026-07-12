@@ -22,7 +22,9 @@ class BankTransactionsReviewScreen extends ConsumerStatefulWidget {
 }
 
 class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsReviewScreen> {
-  late DateTime _from = DateTime.now().subtract(const Duration(days: 90));
+  // Enable Banking erlaubt "bis zu 90 Tage" - exakt 90 wird an der Grenze
+  // abgelehnt (WRONG_TRANSACTIONS_PERIOD), daher etwas Sicherheitsabstand.
+  late DateTime _from = DateTime.now().subtract(const Duration(days: 85));
   final DateTime _to = DateTime.now();
   bool _hideImported = true;
 
