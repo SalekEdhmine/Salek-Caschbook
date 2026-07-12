@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/bank_connection.dart';
@@ -29,6 +30,25 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
   final DateTime _to = DateTime.now();
   bool _hideImported = true;
   bool _syncing = false;
+  Timer? _autoRefresh;
+
+  @override
+  void initState() {
+    super.initState();
+    // Zeigt alle 10s die zuletzt gespeicherten Daten neu an (rein lokal aus
+    // PocketBase-Cache, keine Bank-Abfrage).
+    _autoRefresh = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        ref.invalidate(bankTransactionsProvider((accountUid: widget.account.uid, from: _from, to: _to)));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoRefresh?.cancel();
+    super.dispose();
+  }
 
   Future<void> _refresh(({String accountUid, DateTime from, DateTime to}) args) async {
     setState(() => _syncing = true);

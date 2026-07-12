@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/bank_connection.dart';
@@ -7,11 +8,35 @@ import '../utils/formatters.dart';
 import 'bank_connect_screen.dart';
 import 'bank_transactions_review_screen.dart';
 
-class BankAccountsScreen extends ConsumerWidget {
+class BankAccountsScreen extends ConsumerStatefulWidget {
   const BankAccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BankAccountsScreen> createState() => _BankAccountsScreenState();
+}
+
+class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
+  Timer? _autoRefresh;
+
+  @override
+  void initState() {
+    super.initState();
+    // Zeigt alle 10s die zuletzt gespeicherten Daten neu an (rein lokal aus
+    // PocketBase-Cache, keine Bank-Abfrage - die läuft separat per
+    // Hintergrund-Sync/Timer alle 6h bzw. manuellem "Aktualisieren").
+    _autoRefresh = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) ref.invalidate(bankConnectionsProvider);
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoRefresh?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final connectionsAsync = ref.watch(bankConnectionsProvider);
 
     return Scaffold(
