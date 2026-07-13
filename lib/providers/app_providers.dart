@@ -295,13 +295,16 @@ final bankTargetBookProvider = FutureProvider<String?>((ref) {
   return BankService.instance.getTargetBook();
 });
 
-// ── Benachrichtigungen ────────────────────────────────────────────────────
-final notificationsProvider = FutureProvider<List<AppNotification>>((ref) {
+// ── Benachrichtigungen (In-App-Liste) ─────────────────────────────────────
+// Heißt bewusst "appNotificationsProvider", nicht "notificationsProvider" -
+// dieser Name ist bereits fuer den simplen "Benachrichtigungen an/aus"-
+// Einstellungs-Schalter (State<bool>) oben vergeben.
+final appNotificationsProvider = FutureProvider<List<AppNotification>>((ref) {
   return NotifyService.instance.getNotifications();
 });
 
 final unreadNotificationCountProvider = Provider<int>((ref) {
-  return ref.watch(notificationsProvider).valueOrNull?.where((n) => !n.read).length ?? 0;
+  return ref.watch(appNotificationsProvider).valueOrNull?.where((n) => !n.read).length ?? 0;
 });
 
 // ── Alle Bücher über alle Businesses hinweg (fürs Ziel-Buch-Picker je Bank) ──

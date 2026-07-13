@@ -27,7 +27,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // Aktualisiert den Ungelesen-Badge periodisch im Hintergrund, nicht nur
     // beim Öffnen des Benachrichtigungs-Tabs.
     _notificationsPoll = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) ref.invalidate(notificationsProvider);
+      if (mounted) ref.invalidate(appNotificationsProvider);
     });
     // Nach dem Enable-Banking-Redirect landet man hier mit ?bank=connected
     // bzw. ?bank=error (siehe enablebanking_service /enablebanking/callback).
@@ -99,7 +99,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         selectedIndex: _index,
         onDestinationSelected: (i) {
           setState(() => _index = i);
-          if (i == 2) ref.invalidate(notificationsProvider);
+          if (i == 2) ref.invalidate(appNotificationsProvider);
         },
         destinations: [
           NavigationDestination(

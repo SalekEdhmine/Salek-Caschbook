@@ -19,7 +19,7 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
-    final notificationsAsync = ref.watch(notificationsProvider);
+    final notificationsAsync = ref.watch(appNotificationsProvider);
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -32,7 +32,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             tooltip: AppStrings.tr('notifications_mark_all_read'),
             onPressed: () async {
               await NotifyService.instance.markAllRead();
-              ref.invalidate(notificationsProvider);
+              ref.invalidate(appNotificationsProvider);
             },
           ),
         ],
@@ -41,7 +41,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         const _PushPermissionBanner(),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () async => ref.invalidate(notificationsProvider),
+            onRefresh: () async => ref.invalidate(appNotificationsProvider),
             child: notificationsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('$e'))),
@@ -170,7 +170,7 @@ class _NotificationTile extends ConsumerWidget {
   Future<void> _open(BuildContext context, WidgetRef ref) async {
     if (!notification.read) {
       await NotifyService.instance.markRead(notification.id);
-      ref.invalidate(notificationsProvider);
+      ref.invalidate(appNotificationsProvider);
     }
     if (notification.transactionId == null) return;
 
@@ -190,7 +190,7 @@ class _NotificationTile extends ConsumerWidget {
         transaction: transaction,
         currency: book.isNotEmpty ? book.first.currency : 'EUR',
         availableBooks: books,
-        onChanged: () => ref.invalidate(notificationsProvider),
+        onChanged: () => ref.invalidate(appNotificationsProvider),
       ),
     ));
   }
