@@ -20,39 +20,65 @@ window.getNotificationPermission = function () {
   return Notification.permission;
 };
 
+// Gibt bei Erfolg 'granted' zurueck, sonst einen sprechenden Fehlercode
+// (wird in der App als SnackBar angezeigt - ohne das koennten wir aus der
+// Ferne nie sehen, an welcher Stelle es auf einem Geraet hakt).
 window.subscribeToPush = async function (token, apiBase) {
   if (typeof Notification === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
     return 'unsupported';
   }
+  var permission;
   try {
-    var permission = await Notification.requestPermission();
-    if (permission !== 'granted') return permission;
+    permission = await Notification.requestPermission();
+  } catch (e) {
+    return 'permission-request-failed: ' + e.message;
+  }
+  if (permission !== 'granted') return permission;
 
-    var reg = await navigator.serviceWorker.register('/push_sw.js', { scope: '/push/' });
+  var reg;
+  try {
+    reg = await navigator.serviceWorker.register('/push_sw.js', { scope: '/push/' });
     await navigator.serviceWorker.ready;
+  } catch (e) {
+    return 'sw-register-failed: ' + e.message;
+  }
 
+  var applicationServerKey;
+  try {
     var keyRes = await fetch(apiBase + '/api/push/vapid-public-key');
+    if (!keyRes.ok) return 'vapid-fetch-failed: HTTP ' + keyRes.status;
     var keyData = await keyRes.json();
-    var applicationServerKey = urlBase64ToUint8Array(keyData.key);
+    if (!keyData.key) return 'vapid-fetch-failed: kein Schluessel in Antwort';
+    applicationServerKey = urlBase64ToUint8Array(keyData.key);
+  } catch (e) {
+    return 'vapid-fetch-failed: ' + e.message;
+  }
 
-    var sub = await reg.pushManager.getSubscription();
+  var sub;
+  try {
+    sub = await reg.pushManager.getSubscription();
     if (!sub) {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey,
       });
     }
+  } catch (e) {
+    return 'subscribe-failed: ' + e.message;
+  }
 
-    await fetch(apiBase + '/api/push/subscribe', {
+  try {
+    var postRes = await fetch(apiBase + '/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': token },
       body: JSON.stringify(sub.toJSON()),
     });
-    return 'granted';
+    if (!postRes.ok) return 'server-save-failed: HTTP ' + postRes.status;
   } catch (e) {
-    console.error('Push-Abo fehlgeschlagen:', e);
-    return 'error';
+    return 'server-save-failed: ' + e.message;
   }
+
+  return 'granted';
 };
 
 window.unsubscribeFromPush = async function (token, apiBase) {
