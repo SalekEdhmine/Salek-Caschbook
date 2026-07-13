@@ -510,7 +510,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                 );
               }
-              final recent = txs.take(10).toList();
+              final recent = txs;
               return SliverList(delegate: SliverChildBuilderDelegate(
                 (ctx, i) {
                   final books = ref.read(booksProvider(business.id!)).valueOrNull ?? [];

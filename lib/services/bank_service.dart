@@ -81,6 +81,29 @@ class BankService {
     }
   }
 
+  /// Liefert die vom Nutzer gewählte Ziel-Buch-ID für Bank-Auto-Import
+  /// (`null`, falls noch keine Wahl getroffen wurde - dann greift serverseitig
+  /// der Fallback auf ein automatisch angelegtes "Bank-Import"-Buch).
+  Future<String?> getTargetBook() async {
+    final res = await http.get(Uri.parse('$_baseUrl/api/banks/settings'), headers: _headers);
+    if (res.statusCode != 200) {
+      throw Exception(_errorMessage(res, 'Einstellungen konnten nicht geladen werden'));
+    }
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return data['target_book'] as String?;
+  }
+
+  Future<void> setTargetBook(String? bookId) async {
+    final res = await http.put(
+      Uri.parse('$_baseUrl/api/banks/settings'),
+      headers: _headers,
+      body: jsonEncode({'target_book': bookId}),
+    );
+    if (res.statusCode != 200) {
+      throw Exception(_errorMessage(res, 'Einstellungen konnten nicht gespeichert werden'));
+    }
+  }
+
   Future<List<BankTransaction>> getTransactions({
     required String accountUid,
     required DateTime from,

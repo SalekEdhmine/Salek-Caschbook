@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_strings.dart';
 import '../models/bank_connection.dart';
+import '../models/book.dart';
 import '../providers/app_providers.dart';
 import '../services/bank_service.dart';
 import '../utils/formatters.dart';
@@ -41,7 +42,16 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     final connectionsAsync = ref.watch(bankConnectionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.tr('tab_banks'))),
+      appBar: AppBar(
+        title: Text(AppStrings.tr('tab_banks')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book_outlined),
+            tooltip: AppStrings.tr('bank_target_book_tooltip'),
+            onPressed: () => _openTargetBookPicker(context, ref),
+          ),
+        ],
+      ),
       body: connectionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(error: e, onRetry: () => ref.invalidate(bankConnectionsProvider)),
@@ -70,6 +80,73 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
   void _openConnect(BuildContext context, WidgetRef ref) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => const BankConnectScreen()));
     ref.invalidate(bankConnectionsProvider);
+  }
+
+  void _openTargetBookPicker(BuildContext context, WidgetRef ref) async {
+    final businesses = await ref.read(businessesProvider.future);
+    final List<(Book, String)> booksWithBusiness = [];
+    for (final biz in businesses) {
+      final books = await ref.read(booksProvider(biz.id!).future);
+      for (final b in books) {
+        booksWithBusiness.add((b, biz.name));
+      }
+    }
+    final currentTarget = await ref.read(bankTargetBookProvider.future);
+    // Radio-Werte dürfen kein `null` sein (sonst nicht von "Dialog abgebrochen"
+    // unterscheidbar) - '' steht stellvertretend für "Automatisch".
+    const autoValue = '';
+    final currentGroupValue = currentTarget ?? autoValue;
+
+    if (!context.mounted) return;
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(AppStrings.tr('bank_target_book_title')),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              AppStrings.tr('bank_target_book_body'),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
+          ),
+          const SizedBox(height: 8),
+          RadioListTile<String>(
+            title: Text(AppStrings.tr('bank_target_book_auto')),
+            value: autoValue,
+            groupValue: currentGroupValue,
+            onChanged: (v) => Navigator.pop(ctx, v),
+          ),
+          for (final (book, bizName) in booksWithBusiness)
+            RadioListTile<String>(
+              title: Text(book.name),
+              subtitle: Text(bizName),
+              value: book.id!,
+              groupValue: currentGroupValue,
+              onChanged: (v) => Navigator.pop(ctx, v),
+            ),
+        ],
+      ),
+    );
+
+    // Dialog per Tippen außerhalb abgebrochen -> nichts ändern.
+    if (selected == null || selected == currentGroupValue) return;
+    final newTarget = selected == autoValue ? null : selected;
+    try {
+      await BankService.instance.setTargetBook(newTarget);
+      ref.invalidate(bankTargetBookProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.tr('bank_target_book_saved'))),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.tr('bank_target_book_save_failed')), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }
 

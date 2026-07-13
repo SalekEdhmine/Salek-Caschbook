@@ -289,6 +289,10 @@ final bankAspspsProvider = FutureProvider.family<List<BankAspsp>, String>((ref, 
   return BankService.instance.getAspsps(country: country);
 });
 
+final bankTargetBookProvider = FutureProvider<String?>((ref) {
+  return BankService.instance.getTargetBook();
+});
+
 final bankTransactionsProvider = FutureProvider.family<List<BankTransaction>,
     ({String accountUid, DateTime from, DateTime to})>((ref, args) {
   return BankService.instance.getTransactions(accountUid: args.accountUid, from: args.from, to: args.to);
