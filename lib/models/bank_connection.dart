@@ -41,6 +41,7 @@ class BankConnection {
   final String status;
   final DateTime? validUntil;
   final List<BankAccount> accounts;
+  final String? targetBook;
 
   const BankConnection({
     required this.id,
@@ -49,6 +50,7 @@ class BankConnection {
     required this.status,
     this.validUntil,
     this.accounts = const [],
+    this.targetBook,
   });
 
   factory BankConnection.fromMap(Map<String, dynamic> m) => BankConnection(
@@ -62,6 +64,7 @@ class BankConnection {
         accounts: ((m['accounts'] as List?) ?? const [])
             .map((a) => BankAccount.fromMap(Map<String, dynamic>.from(a as Map)))
             .toList(),
+        targetBook: (m['target_book'] as String?)?.isNotEmpty == true ? m['target_book'] as String : null,
       );
 }
 

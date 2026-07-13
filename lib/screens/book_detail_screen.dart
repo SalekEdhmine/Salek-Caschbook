@@ -738,6 +738,19 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
                       }
                     : null,
               ),
+              const SizedBox(width: 8),
+              _FilterDropdownButton(
+                icon: Icons.swap_vert,
+                label: _typeFilterLabel(filter.typeFilter),
+                highlighted: filter.typeFilter != 'all',
+                onTap: () => _showTypeFilterSheet(context),
+                onClear: filter.typeFilter != 'all'
+                    ? () {
+                        ref.read(transactionFilterProvider(widget.book.id!).notifier).setType('all');
+                        _pushFilter();
+                      }
+                    : null,
+              ),
             ]),
           ),
         ),
@@ -991,6 +1004,47 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  String _typeFilterLabel(String typeFilter) {
+    switch (typeFilter) {
+      case 'income':  return AppStrings.tr('income');
+      case 'expense': return AppStrings.tr('expense');
+      default:        return AppStrings.tr('type');
+    }
+  }
+
+  void _showTypeFilterSheet(BuildContext context) {
+    final filter = ref.read(transactionFilterProvider(widget.book.id!));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(AppStrings.tr('type'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+          ),
+          RadioListTile<String>(
+            title: Text(AppStrings.tr('all')), value: 'all', groupValue: filter.typeFilter,
+            onChanged: (v) { ref.read(transactionFilterProvider(widget.book.id!).notifier).setType(v!); _pushFilter(); Navigator.pop(sheetCtx); },
+          ),
+          RadioListTile<String>(
+            title: Text(AppStrings.tr('income')), value: 'income', groupValue: filter.typeFilter,
+            onChanged: (v) { ref.read(transactionFilterProvider(widget.book.id!).notifier).setType(v!); _pushFilter(); Navigator.pop(sheetCtx); },
+          ),
+          RadioListTile<String>(
+            title: Text(AppStrings.tr('expense')), value: 'expense', groupValue: filter.typeFilter,
+            onChanged: (v) { ref.read(transactionFilterProvider(widget.book.id!).notifier).setType(v!); _pushFilter(); Navigator.pop(sheetCtx); },
+          ),
+          const SizedBox(height: 8),
+        ]),
       ),
     );
   }

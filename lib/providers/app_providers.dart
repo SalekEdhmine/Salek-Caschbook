@@ -293,6 +293,19 @@ final bankTargetBookProvider = FutureProvider<String?>((ref) {
   return BankService.instance.getTargetBook();
 });
 
+// ── Alle Bücher über alle Businesses hinweg (fürs Ziel-Buch-Picker je Bank) ──
+final allBooksWithBusinessProvider = FutureProvider<List<(Book, String)>>((ref) async {
+  final businesses = await ref.watch(businessesProvider.future);
+  final result = <(Book, String)>[];
+  for (final biz in businesses) {
+    final books = await ref.watch(booksProvider(biz.id!).future);
+    for (final b in books) {
+      result.add((b, biz.name));
+    }
+  }
+  return result;
+});
+
 final bankTransactionsProvider = FutureProvider.family<List<BankTransaction>,
     ({String accountUid, DateTime from, DateTime to})>((ref, args) {
   return BankService.instance.getTransactions(accountUid: args.accountUid, from: args.from, to: args.to);

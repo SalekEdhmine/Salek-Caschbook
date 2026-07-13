@@ -93,6 +93,20 @@ class BankService {
     return data['target_book'] as String?;
   }
 
+  /// Setzt das Ziel-Buch fuer genau eine Bankverbindung (jede verbundene
+  /// Bank kann in ein anderes Buch importieren). `bookId: null` setzt sie
+  /// zurueck auf den Fallback (globale Einstellung bzw. automatisches Buch).
+  Future<void> setConnectionTargetBook(String connectionId, String? bookId) async {
+    final res = await http.put(
+      Uri.parse('$_baseUrl/api/banks/connections/$connectionId/target-book'),
+      headers: _headers,
+      body: jsonEncode({'target_book': bookId}),
+    );
+    if (res.statusCode != 200) {
+      throw Exception(_errorMessage(res, 'Einstellungen konnten nicht gespeichert werden'));
+    }
+  }
+
   Future<void> setTargetBook(String? bookId) async {
     final res = await http.put(
       Uri.parse('$_baseUrl/api/banks/settings'),

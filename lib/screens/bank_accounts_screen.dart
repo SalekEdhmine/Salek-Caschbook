@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_strings.dart';
 import '../models/bank_connection.dart';
-import '../models/book.dart';
 import '../providers/app_providers.dart';
 import '../services/bank_service.dart';
 import '../utils/formatters.dart';
@@ -42,16 +41,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     final connectionsAsync = ref.watch(bankConnectionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.tr('tab_banks')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu_book_outlined),
-            tooltip: AppStrings.tr('bank_target_book_tooltip'),
-            onPressed: () => _openTargetBookPicker(context, ref),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(AppStrings.tr('tab_banks'))),
       body: connectionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(error: e, onRetry: () => ref.invalidate(bankConnectionsProvider)),
@@ -81,71 +71,65 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => const BankConnectScreen()));
     ref.invalidate(bankConnectionsProvider);
   }
+}
 
-  void _openTargetBookPicker(BuildContext context, WidgetRef ref) async {
-    final businesses = await ref.read(businessesProvider.future);
-    final List<(Book, String)> booksWithBusiness = [];
-    for (final biz in businesses) {
-      final books = await ref.read(booksProvider(biz.id!).future);
-      for (final b in books) {
-        booksWithBusiness.add((b, biz.name));
-      }
-    }
-    final currentTarget = await ref.read(bankTargetBookProvider.future);
-    // Radio-Werte dürfen kein `null` sein (sonst nicht von "Dialog abgebrochen"
-    // unterscheidbar) - '' steht stellvertretend für "Automatisch".
-    const autoValue = '';
-    final currentGroupValue = currentTarget ?? autoValue;
+/// Öffnet den Ziel-Buch-Picker für genau eine Bankverbindung (jede Bank kann
+/// in ein anderes Buch importieren, siehe PUT .../connections/{id}/target-book).
+Future<void> _openTargetBookPickerFor(BuildContext context, WidgetRef ref, BankConnection connection) async {
+  final booksWithBusiness = await ref.read(allBooksWithBusinessProvider.future);
+  // Radio-Werte dürfen kein `null` sein (sonst nicht von "Dialog abgebrochen"
+  // unterscheidbar) - '' steht stellvertretend für "Automatisch".
+  const autoValue = '';
+  final currentGroupValue = connection.targetBook ?? autoValue;
 
-    if (!context.mounted) return;
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(AppStrings.tr('bank_target_book_title')),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              AppStrings.tr('bank_target_book_body'),
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-            ),
+  if (!context.mounted) return;
+  final selected = await showDialog<String>(
+    context: context,
+    builder: (ctx) => SimpleDialog(
+      title: Text(AppStrings.tr('bank_target_book_title')),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            AppStrings.tr('bank_target_book_body_per_bank').replaceAll('{name}', connection.aspspName),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
           ),
-          const SizedBox(height: 8),
+        ),
+        const SizedBox(height: 8),
+        RadioListTile<String>(
+          title: Text(AppStrings.tr('bank_target_book_auto')),
+          value: autoValue,
+          groupValue: currentGroupValue,
+          onChanged: (v) => Navigator.pop(ctx, v),
+        ),
+        for (final (book, bizName) in booksWithBusiness)
           RadioListTile<String>(
-            title: Text(AppStrings.tr('bank_target_book_auto')),
-            value: autoValue,
+            title: Text(book.name),
+            subtitle: Text(bizName),
+            value: book.id!,
             groupValue: currentGroupValue,
             onChanged: (v) => Navigator.pop(ctx, v),
           ),
-          for (final (book, bizName) in booksWithBusiness)
-            RadioListTile<String>(
-              title: Text(book.name),
-              subtitle: Text(bizName),
-              value: book.id!,
-              groupValue: currentGroupValue,
-              onChanged: (v) => Navigator.pop(ctx, v),
-            ),
-        ],
-      ),
-    );
+      ],
+    ),
+  );
 
-    // Dialog per Tippen außerhalb abgebrochen -> nichts ändern.
-    if (selected == null || selected == currentGroupValue) return;
-    final newTarget = selected == autoValue ? null : selected;
-    try {
-      await BankService.instance.setTargetBook(newTarget);
-      ref.invalidate(bankTargetBookProvider);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.tr('bank_target_book_saved'))),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.tr('bank_target_book_save_failed')), backgroundColor: Colors.red),
-        );
-      }
+  // Dialog per Tippen außerhalb abgebrochen -> nichts ändern.
+  if (selected == null || selected == currentGroupValue) return;
+  final newTarget = selected == autoValue ? null : selected;
+  try {
+    await BankService.instance.setConnectionTargetBook(connection.id, newTarget);
+    ref.invalidate(bankConnectionsProvider);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.tr('bank_target_book_saved'))),
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.tr('bank_target_book_save_failed')), backgroundColor: Colors.red),
+      );
     }
   }
 }
@@ -203,6 +187,31 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
+/// Zeigt an, in welches Buch diese Bankverbindung importiert (oder
+/// "Automatisch", falls kein eigenes Ziel-Buch gewählt wurde).
+class _TargetBookLabel extends ConsumerWidget {
+  final BankConnection connection;
+  const _TargetBookLabel({required this.connection});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final style = TextStyle(fontSize: 12, color: Colors.grey.shade600);
+    if (connection.targetBook == null) {
+      return Text('→ ${AppStrings.tr('bank_target_book_auto')}', style: style);
+    }
+    final booksAsync = ref.watch(allBooksWithBusinessProvider);
+    return booksAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (books) {
+        final match = books.where((e) => e.$1.id == connection.targetBook).toList();
+        if (match.isEmpty) return const SizedBox.shrink();
+        return Text('→ ${match.first.$1.name}', style: style);
+      },
+    );
+  }
+}
+
 class _ConnectionCard extends ConsumerWidget {
   final BankConnection connection;
   const _ConnectionCard({required this.connection});
@@ -231,13 +240,19 @@ class _ConnectionCard extends ConsumerWidget {
             ),
             PopupMenuButton<String>(
               itemBuilder: (_) => [
+                PopupMenuItem(value: 'target_book', child: Text(AppStrings.tr('bank_target_book_tooltip'))),
                 PopupMenuItem(value: 'disconnect', child: Text(AppStrings.tr('bank_disconnect'))),
               ],
               onSelected: (v) {
+                if (v == 'target_book') _openTargetBookPickerFor(context, ref, connection);
                 if (v == 'disconnect') _confirmDisconnect(context, ref);
               },
             ),
           ]),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 52),
+            child: _TargetBookLabel(connection: connection),
+          ),
           if (expiringSoon)
             Padding(
               padding: const EdgeInsets.only(top: 8),
