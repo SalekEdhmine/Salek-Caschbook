@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/book.dart';
@@ -10,6 +12,7 @@ import '../models/activity.dart';
 import '../models/transaction.dart' as model;
 import '../utils/id_gen.dart';
 import 'local_db.dart';
+import 'notify_service.dart';
 import 'pb_client.dart';
 import 'sync_service.dart';
 
@@ -375,6 +378,42 @@ class PbService {
     return rows.isEmpty ? null : _txFromRow(rows.first);
   });
 
+  /// Sucht eine Buchung per ID - erst lokal, dann (z.B. für eine frisch per
+  /// Push-Benachrichtigung gemeldete Buchung eines anderen Mitglieds, die
+  /// dieses Gerät noch nicht heruntergesynct hat) direkt bei PocketBase.
+  Future<model.Transaction?> getTransactionById(String id) => _resilient(() async {
+    final db = await _db;
+    final rows = await db.query('transactions', where: 'id = ? AND deleted = 0', whereArgs: [id], limit: 1);
+    if (rows.isNotEmpty) return _txFromRow(rows.first);
+
+    try {
+      final r = await pb.collection('transactions').getOne(id, expand: 'category');
+      final cat = r.get<RecordModel?>('expand.category');
+      final rawAttachments = r.data['attachments'];
+      final attachments = rawAttachments is List ? List<String>.from(rawAttachments) : <String>[];
+      return model.Transaction(
+        id: r.id,
+        bookId: r.getStringValue('book'),
+        categoryId: r.getStringValue('category'),
+        title: r.getStringValue('title'),
+        amount: r.getDoubleValue('amount'),
+        type: TransactionType.values.firstWhere(
+          (e) => e.name == r.getStringValue('type'), orElse: () => TransactionType.expense),
+        date: DateTime.tryParse(r.getStringValue('date')) ?? DateTime.now(),
+        note: r.getStringValue('note').isEmpty ? null : r.getStringValue('note'),
+        attachments: attachments,
+        categoryName: cat?.getStringValue('name'),
+        categoryIcon: cat?.getStringValue('icon'),
+        categoryColor: cat?.getIntValue('color_value'),
+        paymentMode: r.getStringValue('payment_mode'),
+        contact: r.getStringValue('contact'),
+        externalRef: r.getStringValue('external_ref'),
+      );
+    } catch (_) {
+      return null;
+    }
+  });
+
   Future<List<model.Transaction>> getAllTransactions(String bookId) => _resilient(() async {
     final db = await _db;
     final rows = await db.query('transactions',
@@ -417,6 +456,10 @@ class PbService {
     if (tx.externalRef != null && tx.externalRef!.isNotEmpty) body['external_ref'] = tx.externalRef;
     await SyncService.instance.enqueue(entity: 'transactions', op: 'create', recordId: id, payload: body);
     await logActivity(bookId: tx.bookId, action: 'created', entityType: 'transaction', entityId: id, details: tx.title);
+    // Best-effort, nicht blockierend: benachrichtigt andere Mitglieder dieses
+    // Buchs (falls geteilt) über die neue Buchung. Absichtlich nicht awaited,
+    // damit ein langsamer/fehlschlagender Push-Versand das Speichern nie verzögert.
+    unawaited(NotifyService.instance.notifyTransactionCreated(transactionId: id, bookId: tx.bookId));
     return id;
   }
 

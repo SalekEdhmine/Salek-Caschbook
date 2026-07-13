@@ -8,9 +8,11 @@ import '../models/category.dart';
 import '../models/budget.dart';
 import '../models/transaction.dart';
 import '../models/bank_connection.dart';
+import '../models/app_notification.dart';
 import '../services/pb_service.dart';
 import '../services/sync_service.dart';
 import '../services/bank_service.dart';
+import '../services/notify_service.dart';
 import '../l10n/app_strings.dart';
 
 // ── Theme (persisted) ─────────────────────────────────────────────────────────
@@ -291,6 +293,15 @@ final bankAspspsProvider = FutureProvider.family<List<BankAspsp>, String>((ref, 
 
 final bankTargetBookProvider = FutureProvider<String?>((ref) {
   return BankService.instance.getTargetBook();
+});
+
+// ── Benachrichtigungen ────────────────────────────────────────────────────
+final notificationsProvider = FutureProvider<List<AppNotification>>((ref) {
+  return NotifyService.instance.getNotifications();
+});
+
+final unreadNotificationCountProvider = Provider<int>((ref) {
+  return ref.watch(notificationsProvider).valueOrNull?.where((n) => !n.read).length ?? 0;
 });
 
 // ── Alle Bücher über alle Businesses hinweg (fürs Ziel-Buch-Picker je Bank) ──
