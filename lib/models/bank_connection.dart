@@ -30,7 +30,7 @@ class BankAccount {
         name: m['name'] as String?,
         currency: m['currency'] as String?,
         defaultBookId: m['default_book'] as String?,
-        balance: (m['balance'] as num?)?.toDouble(),
+        balance: m['balance'] == null ? null : double.tryParse('${m['balance']}'),
       );
 }
 
