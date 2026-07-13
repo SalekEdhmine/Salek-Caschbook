@@ -38,6 +38,7 @@ class BankConnection {
   final String id;
   final String aspspName;
   final String aspspCountry;
+  final String? aspspLogo;
   final String status;
   final DateTime? validUntil;
   final List<BankAccount> accounts;
@@ -47,6 +48,7 @@ class BankConnection {
     required this.id,
     required this.aspspName,
     required this.aspspCountry,
+    this.aspspLogo,
     required this.status,
     this.validUntil,
     this.accounts = const [],
@@ -57,6 +59,7 @@ class BankConnection {
         id: m['id'] as String? ?? '',
         aspspName: m['aspsp_name'] as String? ?? '',
         aspspCountry: m['aspsp_country'] as String? ?? '',
+        aspspLogo: (m['aspsp_logo'] as String?)?.isNotEmpty == true ? m['aspsp_logo'] as String : null,
         status: m['status'] as String? ?? 'active',
         validUntil: (m['valid_until'] as String?)?.isNotEmpty == true
             ? DateTime.tryParse(m['valid_until'] as String)

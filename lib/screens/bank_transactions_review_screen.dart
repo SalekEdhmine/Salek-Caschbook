@@ -11,6 +11,7 @@ import '../providers/app_providers.dart';
 import '../services/bank_service.dart';
 import '../services/pb_service.dart';
 import '../utils/formatters.dart';
+import 'entry_detail_screen.dart';
 
 /// Zeigt die Umsätze eines verbundenen Bankkontos und erlaubt es, einzelne
 /// noch nicht importierte Umsätze als normale CashBook-Buchung zu übernehmen
@@ -90,12 +91,16 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
           ),
         ],
       ),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Column(children: [
-        SwitchListTile(
-          value: _hideImported,
-          onChanged: (v) => setState(() => _hideImported = v),
-          title: Text(AppStrings.tr('bank_hide_imported')),
-          dense: true,
+        Container(
+          color: Theme.of(context).colorScheme.surface,
+          child: SwitchListTile(
+            value: _hideImported,
+            onChanged: (v) => setState(() => _hideImported = v),
+            title: Text(AppStrings.tr('bank_hide_imported'), style: const TextStyle(fontSize: 14)),
+            dense: true,
+          ),
         ),
         const Divider(height: 1),
         Expanded(
@@ -110,8 +115,9 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
                 return Center(child: Text(AppStrings.tr('bank_no_transactions')));
               }
               return ListView.separated(
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => const Divider(height: 1, indent: 68),
                 itemBuilder: (_, i) => _BankTxTile(
                   tx: items[i],
                   currency: widget.account.currency ?? 'EUR',
@@ -136,31 +142,33 @@ class _BankTransactionsReviewScreenState extends ConsumerState<BankTransactionsR
   }
 }
 
-class _BankTxTile extends StatelessWidget {
+class _BankTxTile extends ConsumerWidget {
   final BankTransaction tx;
   final String currency;
   final VoidCallback onImported;
   const _BankTxTile({required this.tx, required this.currency, required this.onImported});
 
   @override
-  Widget build(BuildContext context) {
-    final color = tx.isCredit ? Colors.green : Colors.red;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final color = tx.isCredit ? Colors.green.shade700 : Colors.red.shade700;
     final title = tx.counterparty?.isNotEmpty == true
         ? tx.counterparty!
         : (tx.remittanceInfo?.isNotEmpty == true ? tx.remittanceInfo! : AppStrings.tr('bank_default_title'));
 
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.12),
         child: Icon(tx.isCredit ? Icons.arrow_downward : Icons.arrow_upward, color: color, size: 20),
       ),
-      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       subtitle: Text(
         [formatDate(tx.date), if (tx.remittanceInfo != null && tx.remittanceInfo != title) tx.remittanceInfo]
             .whereType<String>()
             .join(' · '),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
       ),
       trailing: Column(
         mainAxisSize: MainAxisSize.min,
@@ -168,15 +176,17 @@ class _BankTxTile extends StatelessWidget {
         children: [
           Text(
             '${tx.isCredit ? '+' : '-'}${formatCurrency(tx.amount, currency: currency)}',
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 4),
           if (tx.alreadyImported)
-            Chip(
-              label: Text(AppStrings.tr('bank_imported'), style: const TextStyle(fontSize: 11)),
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            )
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.check_circle, size: 13, color: Colors.green.shade600),
+              const SizedBox(width: 3),
+              Text(AppStrings.tr('bank_imported'), style: TextStyle(fontSize: 11, color: Colors.green.shade700)),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right, size: 16, color: Colors.grey.shade400),
+            ])
           else
             SizedBox(
               height: 28,
@@ -188,7 +198,29 @@ class _BankTxTile extends StatelessWidget {
             ),
         ],
       ),
+      onTap: tx.alreadyImported ? () => _openTransaction(context, ref) : null,
     );
+  }
+
+  Future<void> _openTransaction(BuildContext context, WidgetRef ref) async {
+    final transaction = await PbService.instance.getTransactionByExternalRef(tx.externalRef);
+    if (!context.mounted) return;
+    if (transaction == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.tr('bank_syncing_hint'))),
+      );
+      return;
+    }
+    final books = (await ref.read(allBooksWithBusinessProvider.future)).map((e) => e.$1).toList();
+    if (!context.mounted) return;
+    await Navigator.push(context, MaterialPageRoute(
+      builder: (_) => EntryDetailScreen(
+        transaction: transaction,
+        currency: currency,
+        availableBooks: books,
+        onChanged: onImported,
+      ),
+    ));
   }
 
   void _openImportSheet(BuildContext context) {

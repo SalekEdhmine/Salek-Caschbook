@@ -44,11 +44,11 @@ class BankService {
     return list.map((e) => BankAspsp.fromMap(e as Map<String, dynamic>)).toList();
   }
 
-  Future<String> startConnect({required String aspspName, required String aspspCountry}) async {
+  Future<String> startConnect({required String aspspName, required String aspspCountry, String? logo}) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/api/banks/connect'),
       headers: _headers,
-      body: jsonEncode({'aspsp_name': aspspName, 'aspsp_country': aspspCountry}),
+      body: jsonEncode({'aspsp_name': aspspName, 'aspsp_country': aspspCountry, 'logo': logo}),
     );
     if (res.statusCode != 200) {
       throw Exception(_errorMessage(res, 'Verbindung konnte nicht gestartet werden'));

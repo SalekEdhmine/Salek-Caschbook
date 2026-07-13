@@ -6,6 +6,7 @@ import '../models/bank_connection.dart';
 import '../providers/app_providers.dart';
 import '../services/bank_service.dart';
 import '../utils/formatters.dart';
+import '../widgets/bank_logo_avatar.dart';
 import 'bank_connect_screen.dart';
 import 'bank_transactions_review_screen.dart';
 
@@ -40,7 +41,10 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
   Widget build(BuildContext context) {
     final connectionsAsync = ref.watch(bankConnectionsProvider);
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
+      backgroundColor: scheme.surfaceContainerLowest,
       appBar: AppBar(title: Text(AppStrings.tr('tab_banks'))),
       body: connectionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -50,10 +54,11 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(bankConnectionsProvider),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               children: [
+                _TotalBalanceHeader(connections: connections),
+                const SizedBox(height: 16),
                 for (final c in connections) _ConnectionCard(connection: c),
-                const SizedBox(height: 72),
               ],
             ),
           );
@@ -134,6 +139,59 @@ Future<void> _openTargetBookPickerFor(BuildContext context, WidgetRef ref, BankC
   }
 }
 
+/// Gesamtsaldo über alle verbundenen Konten, gruppiert nach Währung (fast
+/// immer nur eine Gruppe/EUR, aber korrekt falls doch gemischt).
+class _TotalBalanceHeader extends StatelessWidget {
+  final List<BankConnection> connections;
+  const _TotalBalanceHeader({required this.connections});
+
+  @override
+  Widget build(BuildContext context) {
+    final byCurrency = <String, double>{};
+    var accountCount = 0;
+    for (final c in connections) {
+      for (final acc in c.accounts) {
+        accountCount++;
+        if (acc.balance == null) continue;
+        final cur = acc.currency ?? 'EUR';
+        byCurrency[cur] = (byCurrency[cur] ?? 0) + acc.balance!;
+      }
+    }
+    if (byCurrency.isEmpty) return const SizedBox.shrink();
+
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [scheme.primary, scheme.primary.withValues(alpha: 0.75)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: scheme.primary.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(
+          AppStrings.tr('bank_total_balance'),
+          style: TextStyle(color: scheme.onPrimary.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 6),
+        for (final entry in byCurrency.entries)
+          Text(
+            formatCurrency(entry.value, currency: entry.key),
+            style: TextStyle(color: scheme.onPrimary, fontSize: 30, fontWeight: FontWeight.bold, height: 1.1),
+          ),
+        const SizedBox(height: 8),
+        Text(
+          AppStrings.tr('bank_accounts_count').replaceAll('{count}', '$accountCount').replaceAll('{banks}', '${connections.length}'),
+          style: TextStyle(color: scheme.onPrimary.withValues(alpha: 0.8), fontSize: 12),
+        ),
+      ]),
+    );
+  }
+}
+
 class _EmptyView extends StatelessWidget {
   final VoidCallback onConnect;
   const _EmptyView({required this.onConnect});
@@ -144,8 +202,12 @@ class _EmptyView extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.account_balance_outlined, size: 72, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
+            child: Icon(Icons.account_balance_outlined, size: 56, color: Colors.grey.shade400),
+          ),
+          const SizedBox(height: 20),
           Text(AppStrings.tr('bank_empty_title'), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
@@ -153,11 +215,15 @@ class _EmptyView extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade600),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: onConnect,
             icon: const Icon(Icons.add_link),
             label: Text(AppStrings.tr('bank_connect')),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
           ),
         ]),
       ),
@@ -212,6 +278,58 @@ class _TargetBookLabel extends ConsumerWidget {
   }
 }
 
+class _AccountTile extends StatelessWidget {
+  final BankAccount acc;
+  const _AccountTile({required this.acc});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final negative = (acc.balance ?? 0) < 0;
+    return Material(
+      color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => BankTransactionsReviewScreen(account: acc)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(Icons.credit_card, size: 18, color: scheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                  acc.name?.isNotEmpty == true ? acc.name! : (acc.iban ?? acc.uid),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                ),
+                if (acc.iban != null)
+                  Text(acc.iban!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.grey.shade600, fontSize: 11.5)),
+              ]),
+            ),
+            const SizedBox(width: 8),
+            if (acc.balance != null)
+              Text(
+                formatCurrency(acc.balance!, currency: acc.currency ?? 'EUR'),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: negative ? Colors.red.shade700 : Colors.green.shade700),
+              ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 class _ConnectionCard extends ConsumerWidget {
   final BankConnection connection;
   const _ConnectionCard({required this.connection});
@@ -221,24 +339,34 @@ class _ConnectionCard extends ConsumerWidget {
     final expiringSoon = connection.validUntil != null &&
         connection.validUntil!.difference(DateTime.now()).inDays < 14;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 3))],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: const Icon(Icons.account_balance),
-            ),
+            BankLogoAvatar(logoUrl: connection.aspspLogo, bankName: connection.aspspName, radius: 22),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(connection.aspspName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(connection.aspspCountry, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                Text(connection.aspspName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 2),
+                Row(children: [
+                  Text(AppStrings.tr('country_${connection.aspspCountry}'), style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('  ·  ', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  _TargetBookLabel(connection: connection),
+                ]),
               ]),
             ),
             PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: Colors.grey.shade600),
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'target_book', child: Text(AppStrings.tr('bank_target_book_tooltip'))),
                 PopupMenuItem(value: 'disconnect', child: Text(AppStrings.tr('bank_disconnect'))),
@@ -249,49 +377,33 @@ class _ConnectionCard extends ConsumerWidget {
               },
             ),
           ]),
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 52),
-            child: _TargetBookLabel(connection: connection),
-          ),
           if (expiringSoon)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(children: [
-                Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange.shade700),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    AppStrings.tr('bank_expiring_soon')
-                        .replaceAll('{date}', formatDate(connection.validUntil!)),
-                    style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
-                  ),
+              padding: const EdgeInsets.only(top: 10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ]),
-            ),
-          const Divider(height: 24),
-          for (final acc in connection.accounts)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.credit_card),
-              title: Text(acc.name?.isNotEmpty == true ? acc.name! : (acc.iban ?? acc.uid)),
-              subtitle: acc.iban != null ? Text(acc.iban!) : null,
-              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                if (acc.balance != null)
-                  Text(
-                    formatCurrency(acc.balance!, currency: acc.currency ?? 'EUR'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: acc.balance! < 0 ? Colors.red.shade700 : Colors.green.shade700,
+                child: Row(children: [
+                  Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange.shade700),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      AppStrings.tr('bank_expiring_soon')
+                          .replaceAll('{date}', formatDate(connection.validUntil!)),
+                      style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
                     ),
                   ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right),
-              ]),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => BankTransactionsReviewScreen(account: acc)),
+                ]),
               ),
             ),
+          const SizedBox(height: 12),
+          for (final acc in connection.accounts) ...[
+            _AccountTile(acc: acc),
+            if (acc != connection.accounts.last) const SizedBox(height: 8),
+          ],
         ]),
       ),
     );

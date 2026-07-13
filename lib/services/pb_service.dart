@@ -365,6 +365,16 @@ class PbService {
         'SELECT COUNT(*) FROM transactions WHERE $where', args)) ?? 0;
   }
 
+  /// Sucht die echte, lokal gespeicherte Buchung zu einem Bank-Umsatz
+  /// (external_ref = Enable-Banking-Dedup-Schlüssel). Liefert `null`, wenn
+  /// der Hintergrund-Sync die Buchung noch nicht heruntergesynct hat.
+  Future<model.Transaction?> getTransactionByExternalRef(String externalRef) => _resilient(() async {
+    final db = await _db;
+    final rows = await db.query('transactions',
+        where: 'external_ref = ? AND deleted = 0', whereArgs: [externalRef], limit: 1);
+    return rows.isEmpty ? null : _txFromRow(rows.first);
+  });
+
   Future<List<model.Transaction>> getAllTransactions(String bookId) => _resilient(() async {
     final db = await _db;
     final rows = await db.query('transactions',

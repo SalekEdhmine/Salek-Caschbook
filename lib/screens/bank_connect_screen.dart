@@ -5,6 +5,7 @@ import '../l10n/app_strings.dart';
 import '../models/bank_connection.dart';
 import '../providers/app_providers.dart';
 import '../services/bank_service.dart';
+import '../widgets/bank_logo_avatar.dart';
 
 const _countryCodes = ['DE', 'AT', 'CH', 'FR', 'ES', 'IT', 'NL', 'GB', 'SE', 'FI', 'LT'];
 
@@ -23,16 +24,22 @@ class _BankConnectScreenState extends ConsumerState<BankConnectScreen> {
   @override
   Widget build(BuildContext context) {
     final aspspsAsync = ref.watch(bankAspspsProvider(_country));
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: scheme.surfaceContainerLowest,
       appBar: AppBar(title: Text(AppStrings.tr('bank_connect'))),
       body: Column(children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Column(children: [
             DropdownButtonFormField<String>(
               value: _country,
-              decoration: InputDecoration(labelText: AppStrings.tr('bank_country'), border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: AppStrings.tr('bank_country'),
+                filled: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              ),
               items: _countryCodes
                   .map((code) => DropdownMenuItem(value: code, child: Text(AppStrings.tr('country_$code'))))
                   .toList(),
@@ -42,8 +49,9 @@ class _BankConnectScreenState extends ConsumerState<BankConnectScreen> {
             TextField(
               decoration: InputDecoration(
                 labelText: AppStrings.tr('bank_search_hint'),
-                border: const OutlineInputBorder(),
+                filled: true,
                 prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
               ),
               onChanged: (v) => setState(() => _search = v),
             ),
@@ -59,14 +67,24 @@ class _BankConnectScreenState extends ConsumerState<BankConnectScreen> {
                   : banks.where((b) => b.name.toLowerCase().contains(_search.toLowerCase())).toList();
               if (filtered.isEmpty) return Center(child: Text(AppStrings.tr('bank_none_found')));
               return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
                 itemCount: filtered.length,
                 itemBuilder: (_, i) {
                   final b = filtered[i];
-                  return ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.account_balance)),
-                    title: Text(b.name),
-                    subtitle: Text(b.country),
-                    onTap: _connecting ? null : () => _connect(b),
+                  return Card(
+                    elevation: 0,
+                    color: scheme.surface,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      leading: BankLogoAvatar(logoUrl: b.logo, bankName: b.name, radius: 20),
+                      title: Text(b.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(AppStrings.tr('country_${b.country}')),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _connecting ? null : () => _connect(b),
+                    ),
                   );
                 },
               );
@@ -81,7 +99,11 @@ class _BankConnectScreenState extends ConsumerState<BankConnectScreen> {
   Future<void> _connect(BankAspsp bank) async {
     setState(() => _connecting = true);
     try {
-      final url = await BankService.instance.startConnect(aspspName: bank.name, aspspCountry: bank.country);
+      final url = await BankService.instance.startConnect(
+        aspspName: bank.name,
+        aspspCountry: bank.country,
+        logo: bank.logo,
+      );
       final uri = Uri.parse(url);
       final ok = await launchUrl(uri, webOnlyWindowName: '_self');
       if (!ok && mounted) {
