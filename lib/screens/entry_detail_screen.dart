@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../models/category.dart' show TransactionType;
 import '../models/transaction.dart';
 import '../models/book.dart';
@@ -32,7 +33,7 @@ class EntryDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buchungsdetails'),
+        title: Text(AppStrings.tr('entry_details_title')),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -40,10 +41,10 @@ class EntryDetailScreen extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'move',     child: ListTile(leading: Icon(Icons.drive_file_move_outlined), title: Text('Verschieben'),         dense: true)),
-              const PopupMenuItem(value: 'copy',     child: ListTile(leading: Icon(Icons.copy_outlined),            title: Text('Kopieren'),             dense: true)),
-              const PopupMenuItem(value: 'opposite', child: ListTile(leading: Icon(Icons.swap_vert),                title: Text('Gegenbuchung'),         dense: true)),
-              const PopupMenuItem(value: 'delete',   child: ListTile(leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Löschen', style: TextStyle(color: Colors.red)), dense: true)),
+              PopupMenuItem(value: 'move',     child: ListTile(leading: const Icon(Icons.drive_file_move_outlined), title: Text(AppStrings.tr('move')),         dense: true)),
+              PopupMenuItem(value: 'copy',     child: ListTile(leading: const Icon(Icons.copy_outlined),            title: Text(AppStrings.tr('copy')),             dense: true)),
+              PopupMenuItem(value: 'opposite', child: ListTile(leading: const Icon(Icons.swap_vert),                title: Text(AppStrings.tr('opposite_entry')),         dense: true)),
+              PopupMenuItem(value: 'delete',   child: ListTile(leading: const Icon(Icons.delete_outline, color: Colors.red), title: Text(AppStrings.tr('delete'), style: const TextStyle(color: Colors.red)), dense: true)),
             ],
             onSelected: (v) => _handleAction(context, v),
           ),
@@ -68,7 +69,7 @@ class EntryDetailScreen extends StatelessWidget {
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(
-                      transaction.title.isNotEmpty ? transaction.title : (transaction.categoryName ?? 'Unbekannt'),
+                      transaction.title.isNotEmpty ? transaction.title : (transaction.categoryName ?? AppStrings.tr('unknown')),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                     if (transaction.categoryName != null)
@@ -87,24 +88,24 @@ class EntryDetailScreen extends StatelessWidget {
 
           // Details
           _DetailCard(children: [
-            _DetailRow(icon: Icons.calendar_today,   label: 'Datum',          value: formatDateTime(transaction.date)),
-            _DetailRow(icon: Icons.swap_vert,        label: 'Typ',            value: isIncome ? 'Einnahme' : 'Ausgabe'),
+            _DetailRow(icon: Icons.calendar_today,   label: AppStrings.tr('date_label'),          value: formatDateTime(transaction.date)),
+            _DetailRow(icon: Icons.swap_vert,        label: AppStrings.tr('type_label'),            value: isIncome ? AppStrings.tr('income') : AppStrings.tr('expense')),
             if (transaction.paymentMode != null && transaction.paymentMode!.isNotEmpty)
-              _DetailRow(icon: Icons.payment,        label: 'Zahlungsart',    value: transaction.paymentMode!),
+              _DetailRow(icon: Icons.payment,        label: AppStrings.tr('payment_mode_label'),    value: transaction.paymentMode!),
             if (transaction.contact != null && transaction.contact!.isNotEmpty)
-              _DetailRow(icon: Icons.person_outline, label: 'Kontakt',        value: transaction.contact!),
+              _DetailRow(icon: Icons.person_outline, label: AppStrings.tr('contact_label'),        value: transaction.contact!),
             if (transaction.note != null && transaction.note!.isNotEmpty)
-              _DetailRow(icon: Icons.note_outlined,  label: 'Notiz',          value: transaction.note!),
+              _DetailRow(icon: Icons.note_outlined,  label: AppStrings.tr('note_label'),          value: transaction.note!),
             if (transaction.isRecurring)
-              _DetailRow(icon: Icons.repeat,         label: 'Wiederkehrend',  value: 'Ja'),
+              _DetailRow(icon: Icons.repeat,         label: AppStrings.tr('recurring'),  value: AppStrings.tr('yes')),
             if (transaction.createdAt != null)
-              _DetailRow(icon: Icons.schedule,       label: 'Erstellt am',    value: formatDateTime(transaction.createdAt!)),
+              _DetailRow(icon: Icons.schedule,       label: AppStrings.tr('created_at_label'),    value: formatDateTime(transaction.createdAt!)),
           ]),
 
           // Attachments
           if (transaction.attachments.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Anhänge (${transaction.attachments.length})',
+            Text('${AppStrings.tr('attachments')} (${transaction.attachments.length})',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             Wrap(
@@ -124,9 +125,9 @@ class EntryDetailScreen extends StatelessWidget {
                       color: isPdf ? Colors.red.shade50 : null,
                     ),
                     child: isPdf
-                        ? const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            Icon(Icons.picture_as_pdf, color: Colors.red),
-                            Text('PDF', style: TextStyle(fontSize: 11)),
+                        ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            const Icon(Icons.picture_as_pdf, color: Colors.red),
+                            Text(AppStrings.tr('pdf'), style: const TextStyle(fontSize: 11)),
                           ])
                         : ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(bytes, fit: BoxFit.cover)),
                   ),
@@ -142,7 +143,7 @@ class EntryDetailScreen extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.drive_file_move_outlined),
-                label: const Text('Verschieben'),
+                label: Text(AppStrings.tr('move')),
                 onPressed: () => _handleAction(context, 'move'),
               ),
             ),
@@ -150,7 +151,7 @@ class EntryDetailScreen extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.copy_outlined),
-                label: const Text('Kopieren'),
+                label: Text(AppStrings.tr('copy')),
                 onPressed: () => _handleAction(context, 'copy'),
               ),
             ),
@@ -160,7 +161,7 @@ class EntryDetailScreen extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.tonalIcon(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
-              label: const Text('Löschen', style: TextStyle(color: Colors.red)),
+              label: Text(AppStrings.tr('delete'), style: const TextStyle(color: Colors.red)),
               style: FilledButton.styleFrom(backgroundColor: Colors.red.withValues(alpha: 0.08)),
               onPressed: () => _handleAction(context, 'delete'),
             ),
@@ -187,14 +188,14 @@ class EntryDetailScreen extends StatelessWidget {
         final ok = await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('Buchung löschen?'),
-            content: const Text('Wandert in den Papierkorb & kann dort wiederhergestellt werden.'),
+            title: Text(AppStrings.tr('delete_entry_title')),
+            content: Text(AppStrings.tr('bulk_delete_body')),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+              TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Löschen'),
+                child: Text(AppStrings.tr('delete')),
               ),
             ],
           ),
@@ -213,13 +214,13 @@ class EntryDetailScreen extends StatelessWidget {
         if (otherBooks.isEmpty) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Kein anderes Buch vorhanden.')),
+              SnackBar(content: Text(AppStrings.tr('no_other_book'))),
             );
           }
           return;
         }
         final targetBook = await _pickBook(context, otherBooks,
-            title: action == 'move' ? 'Wohin verschieben?' : action == 'copy' ? 'Wohin kopieren?' : 'Gegenbuchung wohin?');
+            title: action == 'move' ? AppStrings.tr('move_to_where') : action == 'copy' ? AppStrings.tr('copy_to_where') : AppStrings.tr('opposite_to_where'));
         if (targetBook == null || !context.mounted) return;
         try {
           if (action == 'move') {
@@ -233,12 +234,12 @@ class EntryDetailScreen extends StatelessWidget {
           if (context.mounted) {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(action == 'move' ? 'Verschoben nach ${targetBook.name}' : 'Kopiert nach ${targetBook.name}'),
+              content: Text((action == 'move' ? AppStrings.tr('moved_to_simple') : AppStrings.tr('copied_to_simple')).replaceAll('{name}', targetBook.name)),
             ));
           }
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red));
           }
         }
         break;

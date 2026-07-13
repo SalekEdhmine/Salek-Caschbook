@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../models/business.dart';
 import '../models/book.dart';
 import '../models/category.dart' show TransactionType;
@@ -61,29 +62,29 @@ class _TrashScreenState extends State<TrashScreen> {
   Widget build(BuildContext context) {
     final isEmpty = _deletedBusinesses.isEmpty && _deletedBooks.isEmpty && _deletedTransactions.isEmpty;
     return Scaffold(
-      appBar: AppBar(title: const Text('Papierkorb')),
+      appBar: AppBar(title: Text(AppStrings.tr('trash'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : isEmpty
               ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.delete_outline, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 12),
-                  const Text('Papierkorb ist leer'),
+                  Text(AppStrings.tr('trash_empty')),
                 ]))
               : ListView(padding: const EdgeInsets.all(8), children: [
                   if (_deletedBusinesses.isNotEmpty) ...[
-                    _sectionLabel('Businesses'),
+                    _sectionLabel(AppStrings.tr('sec_business')),
                     ..._deletedBusinesses.map((b) => _TrashTile(
                       icon: Icons.business_rounded,
                       title: b.name,
-                      subtitle: 'Business · ${b.currency}',
+                      subtitle: AppStrings.tr('business_currency_sub').replaceAll('{currency}', b.currency),
                       onRestore: () async {
                         await PbService.instance.restoreBusiness(b.id!);
                         _load();
                       },
                       onDeleteForever: () => _confirmForever(
-                        title: '"${b.name}" endgültig löschen?',
-                        content: 'Das Business und alle zugehörigen Bücher und Buchungen werden unwiderruflich gelöscht.',
+                        title: AppStrings.tr('delete_forever_confirm_title').replaceAll('{name}', b.name),
+                        content: AppStrings.tr('delete_business_forever_body'),
                         onConfirm: () async {
                           await PbService.instance.permanentlyDeleteBusiness(b.id!);
                           _load();
@@ -92,18 +93,18 @@ class _TrashScreenState extends State<TrashScreen> {
                     )),
                   ],
                   if (_deletedBooks.isNotEmpty) ...[
-                    _sectionLabel('Bücher'),
+                    _sectionLabel(AppStrings.tr('section_books')),
                     ..._deletedBooks.map((e) => _TrashTile(
                       icon: Icons.menu_book_rounded,
                       title: e.book.name,
-                      subtitle: 'Buch · ${e.business.name}',
+                      subtitle: AppStrings.tr('book_business_sub').replaceAll('{business}', e.business.name),
                       onRestore: () async {
                         await PbService.instance.restoreBook(e.book.id!);
                         _load();
                       },
                       onDeleteForever: () => _confirmForever(
-                        title: '"${e.book.name}" endgültig löschen?',
-                        content: 'Das Buch und alle Buchungen darin werden unwiderruflich gelöscht.',
+                        title: AppStrings.tr('delete_forever_confirm_title').replaceAll('{name}', e.book.name),
+                        content: AppStrings.tr('delete_book_forever_body'),
                         onConfirm: () async {
                           await PbService.instance.permanentlyDeleteBook(e.book.id!);
                           _load();
@@ -112,18 +113,20 @@ class _TrashScreenState extends State<TrashScreen> {
                     )),
                   ],
                   if (_deletedTransactions.isNotEmpty) ...[
-                    _sectionLabel('Buchungen'),
+                    _sectionLabel(AppStrings.tr('nav_transactions')),
                     ..._deletedTransactions.map((e) => _TrashTile(
                       icon: e.tx.type == TransactionType.income ? Icons.arrow_upward : Icons.arrow_downward,
-                      title: e.tx.title.isNotEmpty ? e.tx.title : (e.tx.categoryName ?? 'Buchung'),
-                      subtitle: '${formatCurrency(e.tx.amount, currency: e.book.currency)} · Buch: ${e.book.name}',
+                      title: e.tx.title.isNotEmpty ? e.tx.title : (e.tx.categoryName ?? AppStrings.tr('entity_transaction')),
+                      subtitle: AppStrings.tr('tx_book_sub')
+                          .replaceAll('{amount}', formatCurrency(e.tx.amount, currency: e.book.currency))
+                          .replaceAll('{book}', e.book.name),
                       onRestore: () async {
                         await PbService.instance.restoreTransaction(e.tx.id!);
                         _load();
                       },
                       onDeleteForever: () => _confirmForever(
-                        title: '"${e.tx.title}" endgültig löschen?',
-                        content: 'Diese Buchung wird unwiderruflich gelöscht.',
+                        title: AppStrings.tr('delete_forever_confirm_title').replaceAll('{name}', e.tx.title),
+                        content: AppStrings.tr('delete_tx_forever_body'),
                         onConfirm: () async {
                           await PbService.instance.permanentlyDeleteTransaction(e.tx.id!);
                           _load();
@@ -153,11 +156,11 @@ class _TrashScreenState extends State<TrashScreen> {
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Endgültig löschen'),
+            child: Text(AppStrings.tr('permanent_delete_tooltip')),
           ),
         ],
       ),
@@ -190,12 +193,12 @@ class _TrashTile extends StatelessWidget {
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(
             icon: const Icon(Icons.restore, color: Colors.green),
-            tooltip: 'Wiederherstellen',
+            tooltip: AppStrings.tr('restore_tooltip'),
             onPressed: onRestore,
           ),
           IconButton(
             icon: const Icon(Icons.delete_forever, color: Colors.red),
-            tooltip: 'Endgültig löschen',
+            tooltip: AppStrings.tr('permanent_delete_tooltip'),
             onPressed: onDeleteForever,
           ),
         ]),

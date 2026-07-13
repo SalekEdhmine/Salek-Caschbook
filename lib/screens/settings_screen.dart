@@ -71,7 +71,7 @@ class SettingsScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
                 minimumSize: const Size(0, 32),
                 padding: const EdgeInsets.symmetric(horizontal: 12)),
-            child: const Text('Einstellungen', style: TextStyle(fontSize: 12)),
+            child: Text(S('tab_settings'), style: const TextStyle(fontSize: 12)),
           ),
         ]),
         const SizedBox(height: 16),
@@ -81,16 +81,16 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.store_outlined),
-            title: const Text('Business-Einstellungen'),
-            subtitle: const Text('Profil, Adresse, Branche & mehr'),
+            title: Text(S('business_settings_title')),
+            subtitle: Text(S('business_settings_sub')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _openBusinessSettings(context, ref),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.group_outlined),
-            title: const Text('Business Team'),
-            subtitle: const Text('Mitglieder einladen & Rollen verwalten'),
+            title: Text(S('business_team')),
+            subtitle: Text(S('business_team_sub')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _openTeam(context, ref),
           ),
@@ -123,7 +123,7 @@ class SettingsScreen extends ConsumerWidget {
           trailing: Switch(
             value: false,
             onChanged: (_) => _showInfo(context, S('set_app_lock'),
-                'Diese Funktion ist noch in Entwicklung und wird bald verfügbar sein.'),
+                S('feature_coming_soon')),
           ),
         ),
         const SizedBox(height: 8),
@@ -164,8 +164,8 @@ class SettingsScreen extends ConsumerWidget {
               ref.read(notificationsProvider.notifier).state = v;
               if (v) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: const Text('Benachrichtigungen aktiviert'),
-                  action: SnackBarAction(label: 'OK', onPressed: () {}),
+                  content: Text(S('notifications_enabled_snackbar')),
+                  action: SnackBarAction(label: S('ok'), onPressed: () {}),
                 ));
               }
             },
@@ -181,28 +181,28 @@ class SettingsScreen extends ConsumerWidget {
         const SizedBox(height: 8),
 
         // ── Synchronisierung ────────────────────────────────────────
-        _sectionLabel(context, 'Synchronisierung'),
+        _sectionLabel(context, S('sec_sync')),
         const _SyncTile(),
         const SizedBox(height: 8),
 
         // ── Wechselkurse ─────────────────────────────────────────────
-        _sectionLabel(context, 'Wechselkurse'),
+        _sectionLabel(context, S('sec_exchange_rates')),
         const _ExchangeRatesTile(),
         const SizedBox(height: 8),
 
         // ── Papierkorb ────────────────────────────────────────────────
         ListTile(
           leading: const Icon(Icons.delete_outline),
-          title: const Text('Papierkorb'),
-          subtitle: const Text('Gelöschte Businesses & Bücher wiederherstellen'),
+          title: Text(S('trash')),
+          subtitle: Text(S('trash_sub')),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen())),
         ),
         const Divider(height: 1, indent: 16, endIndent: 16),
         ListTile(
           leading: const Icon(Icons.admin_panel_settings_outlined),
-          title: const Text('Admin-Panel'),
-          subtitle: const Text('Eigener Admin-Login – Nutzer, Statistiken, Backups'),
+          title: Text(S('admin_panel_title')),
+          subtitle: Text(S('admin_panel_sub')),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPanelScreen())),
         ),
@@ -210,10 +210,10 @@ class SettingsScreen extends ConsumerWidget {
 
         // ── Info ────────────────────────────────────────────────────
         _sectionLabel(context, S('sec_info')),
-        const ListTile(
-          leading: Icon(Icons.account_balance_wallet_outlined),
-          title: Text('CashBook'),
-          subtitle: Text('Dein digitales Kassenbuch'),
+        ListTile(
+          leading: const Icon(Icons.account_balance_wallet_outlined),
+          title: Text(S('app_name')),
+          subtitle: Text(S('app_tagline')),
         ),
         const Divider(height: 1, indent: 16, endIndent: 16),
         ListTile(
@@ -253,13 +253,13 @@ class SettingsScreen extends ConsumerWidget {
         ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           leading: const Icon(Icons.warning_amber_outlined, color: Colors.grey),
-          title: const Text('Erweitert', style: TextStyle(color: Colors.grey)),
+          title: Text(S('advanced'), style: const TextStyle(color: Colors.grey)),
           children: [
             ListTile(
               leading: const Icon(Icons.delete_forever_outlined, color: Colors.red),
               title: Text(S('set_delete_account'), style: const TextStyle(color: Colors.red)),
               onTap: () => _showInfo(context, S('set_delete_account'),
-                  'Zum Löschen deines Kontos kontaktiere uns bitte per E-Mail. Alle Daten werden dauerhaft gelöscht.'),
+                  S('delete_account_body')),
             ),
           ],
         ),
@@ -283,10 +283,10 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (_) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Sprache wählen / Choose Language',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(AppStrings.tr('set_language'),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ),
           const Divider(height: 1),
           ...kSupportedLanguages.map((lang) {
@@ -366,8 +366,8 @@ class SettingsScreen extends ConsumerWidget {
         ?? await PbService.instance.getBooks(business.id!);
     if (!context.mounted) return;
     if (books.isEmpty) {
-      _showInfo(context, 'Kein Buch',
-          'Erstelle zuerst ein Kassenbuch, bevor du Teammitglieder hinzufügst.');
+      _showInfo(context, AppStrings.tr('no_book_title'),
+          AppStrings.tr('no_book_body'));
       return;
     }
     if (books.length == 1) {
@@ -378,7 +378,7 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (_) => BookPickerSheet(
         books: books,
-        title: 'Mitglieder welches Buches?',
+        title: AppStrings.tr('which_book_members'),
         onSelect: (book) {
           Navigator.pop(context);
           Navigator.push(context, MaterialPageRoute(builder: (_) => MembersScreen(book: book)));
@@ -458,7 +458,7 @@ class _ProfileProgress extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color)),
       ]),
       const SizedBox(height: 4),
-      Text('Profil-Status: $label',
+      Text(AppStrings.tr('profile_status').replaceAll('{label}', label),
           style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
     ]);
   }
@@ -507,8 +507,8 @@ class _SyncTileState extends State<_SyncTile> {
       setState(() => _syncing = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(SyncService.instance.isOnline
-            ? 'Synchronisiert'
-            : 'Keine Verbindung zum Server – wird automatisch erneut versucht'),
+            ? AppStrings.tr('sync_status_synced')
+            : AppStrings.tr('sync_status_no_connection')),
         backgroundColor: SyncService.instance.isOnline ? Colors.green : Colors.orange,
       ));
     }
@@ -522,14 +522,14 @@ class _SyncTileState extends State<_SyncTile> {
         fallback ? Icons.warning_amber_outlined : (_isOnline ? Icons.cloud_done_outlined : Icons.cloud_off_outlined),
         color: fallback ? Colors.red : (_isOnline ? Colors.green : Colors.orange),
       ),
-      title: Text(fallback ? 'Eingeschränkter Modus' : (_isOnline ? 'Online' : 'Offline')),
+      title: Text(fallback ? AppStrings.tr('restricted_mode') : (_isOnline ? AppStrings.tr('online_status') : AppStrings.tr('offline_status'))),
       subtitle: Text(fallback
-          ? 'Lokaler Speicher auf diesem Gerät ist defekt – läuft nur im Arbeitsspeicher (kein Offline-Verlauf nach Neuladen, Sync funktioniert trotzdem)'
+          ? AppStrings.tr('restricted_mode_body')
           : (_pendingCount > 0
-              ? '$_pendingCount Änderung(en) werden noch übertragen'
+              ? AppStrings.tr('pending_changes').replaceAll('{count}', '$_pendingCount')
               : (_isOnline
-                  ? 'Änderungen werden automatisch synchronisiert'
-                  : 'Änderungen werden lokal gespeichert und später synchronisiert'))),
+                  ? AppStrings.tr('sync_auto_online')
+                  : AppStrings.tr('sync_auto_offline')))),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         if (_syncing)
           const Padding(
@@ -537,10 +537,10 @@ class _SyncTileState extends State<_SyncTile> {
             child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
           )
         else
-          IconButton(icon: const Icon(Icons.sync), tooltip: 'Jetzt synchronisieren', onPressed: _sync),
+          IconButton(icon: const Icon(Icons.sync), tooltip: AppStrings.tr('sync_now_tooltip'), onPressed: _sync),
         IconButton(
           icon: const Icon(Icons.restart_alt, color: Colors.orange),
-          tooltip: 'Lokalen Speicher zurücksetzen (bei Fehlern/Abstürzen)',
+          tooltip: AppStrings.tr('reset_local_storage_tooltip'),
           onPressed: () => _confirmReset(context),
         ),
       ]),
@@ -551,20 +551,14 @@ class _SyncTileState extends State<_SyncTile> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Lokalen Speicher zurücksetzen?'),
-        content: const Text(
-          'Hilft bei Fehlermeldungen wie "database disk image is malformed" '
-          'oder wenn die App auf diesem Gerät nicht mehr richtig lädt.\n\n'
-          'Es gehen keine Daten verloren – alles wird direkt danach erneut '
-          'vom Server geladen. Nur auf diesem Gerät gespeicherte, noch nicht '
-          'übertragene Änderungen würden dabei verloren gehen.',
-        ),
+        title: Text(AppStrings.tr('reset_local_storage_title')),
+        content: Text(AppStrings.tr('reset_local_storage_body')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.orange),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Zurücksetzen'),
+            child: Text(AppStrings.tr('reset')),
           ),
         ],
       ),
@@ -579,8 +573,8 @@ class _SyncTileState extends State<_SyncTile> {
       await SyncService.instance.syncNow();
       await _loadPending();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Lokaler Speicher zurückgesetzt und neu synchronisiert.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.tr('reset_done')),
           backgroundColor: Colors.green,
         ));
       }
@@ -618,13 +612,13 @@ class _ExchangeRatesTileState extends State<_ExchangeRatesTile> {
     return Column(children: [
       ListTile(
         leading: const Icon(Icons.currency_exchange),
-        title: const Text('Wechselkurse für Statistiken'),
+        title: Text(AppStrings.tr('exchange_rates_title')),
         subtitle: Text(others.isEmpty
-            ? 'Referenzwährung: $_reference – noch keine weiteren Kurse hinterlegt'
-            : 'Referenzwährung: $_reference – ${others.length} Kurs(e) hinterlegt'),
+            ? AppStrings.tr('reference_currency_none').replaceAll('{ref}', _reference)
+            : AppStrings.tr('reference_currency_some').replaceAll('{ref}', _reference).replaceAll('{count}', '${others.length}')),
         trailing: IconButton(
           icon: const Icon(Icons.add),
-          tooltip: 'Kurs hinzufügen',
+          tooltip: AppStrings.tr('add_rate_tooltip'),
           onPressed: () => _editRate(context, null),
         ),
       ),
@@ -649,12 +643,12 @@ class _ExchangeRatesTileState extends State<_ExchangeRatesTile> {
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(currency == null ? 'Wechselkurs hinzufügen' : 'Wechselkurs bearbeiten'),
+        title: Text(currency == null ? AppStrings.tr('add_exchange_rate') : AppStrings.tr('edit_exchange_rate')),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
             controller: currencyCtrl,
             enabled: currency == null,
-            decoration: const InputDecoration(labelText: 'Währungscode (z.B. MRU)'),
+            decoration: InputDecoration(labelText: AppStrings.tr('currency_code_hint')),
             textCapitalization: TextCapitalization.characters,
           ),
           const SizedBox(height: 12),
@@ -665,8 +659,8 @@ class _ExchangeRatesTileState extends State<_ExchangeRatesTile> {
           ),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Speichern')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(AppStrings.tr('save'))),
         ],
       ),
     );
@@ -709,7 +703,7 @@ class _ProfileTileState extends State<_ProfileTile> {
           style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
         ),
       ),
-      title: Text(_name.isNotEmpty ? _name : 'Kein Name'),
+      title: Text(_name.isNotEmpty ? _name : AppStrings.tr('no_name')),
       subtitle: Text(_email),
       trailing: const Icon(Icons.edit_outlined),
       onTap: () => _editName(context),
@@ -721,10 +715,10 @@ class _ProfileTileState extends State<_ProfileTile> {
     final ok = await showDialog<bool>(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Name ändern'),
+        title: Text(AppStrings.tr('change_name')),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: AppStrings.tr('name')),
           autofocus: true,
         ),
         actions: [
@@ -746,7 +740,7 @@ class _ChangePasswordTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.lock_outline),
-      title: const Text('Passwort ändern'),
+      title: Text(AppStrings.tr('change_password')),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => _showDialog(context),
     );
@@ -762,7 +756,7 @@ class _ChangePasswordTile extends StatelessWidget {
       context: ctx,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (_, setS) => AlertDialog(
-          title: const Text('Passwort ändern'),
+          title: Text(AppStrings.tr('change_password')),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             if (error != null) ...[
               Container(
@@ -773,15 +767,15 @@ class _ChangePasswordTile extends StatelessWidget {
               const SizedBox(height: 12),
             ],
             TextField(controller: currentCtrl,
-                decoration: const InputDecoration(labelText: 'Aktuelles Passwort'),
+                decoration: InputDecoration(labelText: AppStrings.tr('current_password')),
                 obscureText: true),
             const SizedBox(height: 12),
             TextField(controller: newCtrl,
-                decoration: const InputDecoration(labelText: 'Neues Passwort'),
+                decoration: InputDecoration(labelText: AppStrings.tr('new_password')),
                 obscureText: true),
             const SizedBox(height: 12),
             TextField(controller: confirmCtrl,
-                decoration: const InputDecoration(labelText: 'Passwort wiederholen'),
+                decoration: InputDecoration(labelText: AppStrings.tr('password_repeat')),
                 obscureText: true),
           ]),
           actions: [
@@ -791,7 +785,7 @@ class _ChangePasswordTile extends StatelessWidget {
             FilledButton(
               onPressed: () async {
                 if (newCtrl.text != confirmCtrl.text) {
-                  setS(() => error = 'Passwörter stimmen nicht überein');
+                  setS(() => error = AppStrings.tr('passwords_mismatch'));
                   return;
                 }
                 final result = await AuthService.changePassword(
@@ -802,7 +796,7 @@ class _ChangePasswordTile extends StatelessWidget {
                   if (dialogCtx.mounted) Navigator.pop(dialogCtx);
                   if (ctx.mounted) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(content: Text('Passwort geändert')),
+                      SnackBar(content: Text(AppStrings.tr('password_changed'))),
                     );
                   }
                 } else {

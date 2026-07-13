@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/budget.dart';
 import '../models/category.dart';
 import '../providers/app_providers.dart';
@@ -23,21 +24,21 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     final categoriesAsync = ref.watch(categoriesProvider(TransactionType.expense));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Budgets')),
+      appBar: AppBar(title: Text(AppStrings.tr('budgets_title'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(budgetsProvider(widget.bookId)),
         child: ListView(padding: const EdgeInsets.all(16), children: [
-          Text('Monatsbudgets festlegen',
+          Text(AppStrings.tr('set_monthly_budgets'),
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text('Lege für jede Ausgaben-Kategorie ein monatliches Limit fest.',
+          Text(AppStrings.tr('set_monthly_budgets_body'),
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
           const SizedBox(height: 16),
           categoriesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('$e')),
             data: (cats) {
-              if (cats.isEmpty) return const Text('Keine Ausgaben-Kategorien vorhanden.');
+              if (cats.isEmpty) return Text(AppStrings.tr('no_expense_categories'));
               return budgetsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('$e')),
@@ -55,12 +56,12 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                           ),
                           title: Text(cat.name),
                           subtitle: budget != null
-                              ? Text('Limit: ${formatCurrency(budget.amount, currency: widget.currency)}',
+                              ? Text(AppStrings.tr('budget_limit').replaceAll('{value}', formatCurrency(budget.amount, currency: widget.currency)),
                                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12))
-                              : Text('Kein Budget', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                              : Text(AppStrings.tr('no_budget'), style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                           trailing: FilledButton.tonalIcon(
                             icon: Icon(budget != null ? Icons.edit : Icons.add, size: 16),
-                            label: Text(budget != null ? 'Ändern' : 'Setzen', style: const TextStyle(fontSize: 12)),
+                            label: Text(budget != null ? AppStrings.tr('change_budget') : AppStrings.tr('set_budget'), style: const TextStyle(fontSize: 12)),
                             onPressed: () => _showBudgetDialog(cat, budget),
                           ),
                         ),
@@ -96,13 +97,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     await showDialog<double>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Budget: ${cat.name}'),
+        title: Text(AppStrings.tr('budget_for').replaceAll('{name}', cat.name)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
             controller: ctrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Monatslimit (${widget.currency})',
+              labelText: AppStrings.tr('monthly_limit').replaceAll('{currency}', widget.currency),
               prefixText: '${currencySymbol(widget.currency)} ',
               border: const OutlineInputBorder(),
             ),
@@ -117,9 +118,9 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                     if (ctx.mounted) Navigator.pop(ctx);
                   }
                 : null,
-            child: Text('Löschen', style: TextStyle(color: existing != null ? Colors.red : Colors.grey)),
+            child: Text(AppStrings.tr('delete'), style: TextStyle(color: existing != null ? Colors.red : Colors.grey)),
           ),
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.tr('cancel'))),
           FilledButton(
             onPressed: () async {
               final amount = parseFlexibleNumber(ctrl.text);
@@ -135,7 +136,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               ref.invalidate(budgetsProvider(widget.bookId));
               if (ctx.mounted) Navigator.pop(ctx);
             },
-            child: const Text('Speichern'),
+            child: Text(AppStrings.tr('save')),
           ),
         ],
       ),

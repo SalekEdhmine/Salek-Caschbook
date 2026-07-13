@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
+import '../l10n/app_strings.dart';
 import '../models/book.dart';
 import '../services/pb_service.dart';
 import '../providers/app_providers.dart';
@@ -59,8 +60,8 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Dieses Bildformat wird nicht unterstützt (z.B. HEIC von iPhone). Bitte als JPG oder PNG wählen.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.tr('unsupported_image_format')),
           backgroundColor: Colors.red,
         ));
       }
@@ -76,7 +77,7 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Buch-Einstellungen')),
+      appBar: AppBar(title: Text(AppStrings.tr('book_settings_title'))),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         // Profilbild
         Center(
@@ -116,10 +117,10 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
         // Name
         TextFormField(
           controller: _nameCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Buchname *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.menu_book_outlined),
+          decoration: InputDecoration(
+            labelText: AppStrings.tr('book_name_field'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.menu_book_outlined),
           ),
         ),
         const SizedBox(height: 16),
@@ -127,10 +128,10 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
         // Description
         TextFormField(
           controller: _descCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Beschreibung (optional)',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.notes_outlined),
+          decoration: InputDecoration(
+            labelText: AppStrings.tr('description_optional'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.notes_outlined),
           ),
           maxLines: 2,
         ),
@@ -140,11 +141,11 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
         TextFormField(
           controller: _balanceCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Anfangssaldo',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.account_balance_outlined),
-            helperText: 'Kontostand zu Beginn (kann negativ sein)',
+          decoration: InputDecoration(
+            labelText: AppStrings.tr('initial_balance_field'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.account_balance_outlined),
+            helperText: AppStrings.tr('initial_balance_helper'),
           ),
         ),
         const SizedBox(height: 16),
@@ -152,10 +153,10 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
         // Currency
         DropdownButtonFormField<String>(
           value: _currency,
-          decoration: const InputDecoration(
-            labelText: 'Währung',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.attach_money),
+          decoration: InputDecoration(
+            labelText: AppStrings.tr('currency'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.attach_money),
           ),
           items: ['EUR', 'USD', 'GBP', 'CHF', 'TRY', 'INR', 'DZD', 'MAD', 'SAR', 'MRU']
               .map((c) => DropdownMenuItem(value: c, child: Text('$c ${currencySymbol(c)}')))
@@ -165,7 +166,7 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
         const SizedBox(height: 16),
 
         // Color picker
-        Text('Farbe', style: Theme.of(context).textTheme.titleSmall),
+        Text(AppStrings.tr('color'), style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -197,13 +198,13 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
           icon: _saving
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : const Icon(Icons.save),
-          label: Text(_saving ? 'Speichern...' : 'Änderungen speichern'),
+          label: Text(_saving ? AppStrings.tr('saving') : AppStrings.tr('save_changes')),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
         ),
         const SizedBox(height: 32),
 
         // Danger zone
-        Text('Gefahrenzone', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.red)),
+        Text(AppStrings.tr('danger_zone'), style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.red)),
         const SizedBox(height: 8),
         Card(
           elevation: 0,
@@ -211,12 +212,12 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
           child: Column(children: [
             ListTile(
               leading: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
-              title: const Text('Alle Buchungen löschen', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
-              subtitle: const Text('Löscht alle Einträge in diesem Buch unwiderruflich'),
+              title: Text(AppStrings.tr('delete_all_transactions'), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+              subtitle: Text(AppStrings.tr('delete_all_transactions_sub')),
               trailing: OutlinedButton(
                 style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)),
                 onPressed: () => _confirmDeleteAll(context),
-                child: const Text('Löschen'),
+                child: Text(AppStrings.tr('delete')),
               ),
             ),
           ]),
@@ -244,13 +245,13 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
       await PbService.instance.updateBook(updated);
       ref.invalidate(booksProvider(widget.book.businessId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Buch gespeichert')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('book_saved'))));
         Navigator.pop(context, updated);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red));
       }
     }
   }
@@ -259,14 +260,14 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Alle Buchungen löschen?'),
-        content: Text('Alle Einträge in "${widget.book.name}" werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.'),
+        title: Text(AppStrings.tr('delete_all_title')),
+        content: Text(AppStrings.tr('delete_all_body').replaceAll('{name}', widget.book.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Alle löschen'),
+            child: Text(AppStrings.tr('delete_all_button')),
           ),
         ],
       ),
@@ -277,12 +278,12 @@ class _BookSettingsScreenState extends ConsumerState<BookSettingsScreen> {
         ref.invalidate(transactionsProvider(widget.book.id!));
         ref.invalidate(summaryProvider(widget.book.id!));
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alle Buchungen gelöscht')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('all_transactions_deleted'))));
           Navigator.pop(context);
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red));
         }
       }
     }

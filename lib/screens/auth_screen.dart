@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../services/auth_service.dart';
 import 'main_scaffold.dart';
 
@@ -70,13 +71,13 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     if (result.success) {
       _goHome();
     } else {
-      _showError(result.error ?? 'Fehler');
+      _showError(result.error ?? AppStrings.tr('error'));
     }
   }
 
   Future<void> _register() async {
     if (_regPassCtrl.text != _regPass2Ctrl.text) {
-      _showError('Passwörter stimmen nicht überein');
+      _showError(AppStrings.tr('passwords_mismatch'));
       return;
     }
     setState(() => _loading = true);
@@ -96,10 +97,10 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       _regPass2Ctrl.clear();
       _tabs.animateTo(0);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Konto erstellt! Bitte jetzt anmelden.'), backgroundColor: Colors.green),
+        SnackBar(content: Text(AppStrings.tr('account_created')), backgroundColor: Colors.green),
       );
     } else {
-      _showError(result.error ?? 'Fehler');
+      _showError(result.error ?? AppStrings.tr('error'));
     }
   }
 
@@ -108,20 +109,20 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Passwort zurücksetzen'),
+        title: Text(AppStrings.tr('reset_password_title')),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Gib deine E-Mail ein. Du bekommst einen Link zum Zurücksetzen.'),
+          Text(AppStrings.tr('reset_password_body')),
           const SizedBox(height: 16),
           TextField(
             controller: emailCtrl,
-            decoration: const InputDecoration(labelText: 'E-Mail', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppStrings.tr('email_field'), prefixIcon: const Icon(Icons.email_outlined), border: const OutlineInputBorder()),
             keyboardType: TextInputType.emailAddress,
             autofocus: true,
           ),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Link senden')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(AppStrings.tr('send_link'))),
         ],
       ),
     );
@@ -130,11 +131,11 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       await AuthService.resetPassword(emailCtrl.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reset-Link wurde an deine E-Mail gesendet.'), backgroundColor: Colors.green),
+          SnackBar(content: Text(AppStrings.tr('reset_link_sent')), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
-      if (mounted) _showError('Fehler: $e');
+      if (mounted) _showError('${AppStrings.tr('error')}: $e');
     }
   }
 
@@ -160,15 +161,15 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               const SizedBox(height: 32),
               Icon(Icons.account_balance_wallet_rounded, size: 64, color: scheme.primary),
               const SizedBox(height: 12),
-              Text('CashBook', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text(AppStrings.tr('app_name'), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              Text('Dein digitales Kassenbuch', style: TextStyle(color: scheme.onSurfaceVariant)),
+              Text(AppStrings.tr('app_tagline'), style: TextStyle(color: scheme.onSurfaceVariant)),
               const SizedBox(height: 32),
               Card(
                 child: Column(children: [
                   TabBar(
                     controller: _tabs,
-                    tabs: const [Tab(text: 'Anmelden'), Tab(text: 'Registrieren')],
+                    tabs: [Tab(text: AppStrings.tr('login_tab')), Tab(text: AppStrings.tr('register_tab'))],
                     indicatorSize: TabBarIndicatorSize.tab,
                   ),
                   SizedBox(
@@ -193,7 +194,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       child: Column(children: [
         TextField(
           controller: _loginEmailCtrl,
-          decoration: const InputDecoration(labelText: 'E-Mail', prefixIcon: Icon(Icons.email_outlined)),
+          decoration: InputDecoration(labelText: AppStrings.tr('email_field'), prefixIcon: const Icon(Icons.email_outlined)),
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
         ),
@@ -201,7 +202,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         TextField(
           controller: _loginPassCtrl,
           decoration: InputDecoration(
-            labelText: 'Passwort',
+            labelText: AppStrings.tr('password_field'),
             prefixIcon: const Icon(Icons.lock_outlined),
             suffixIcon: IconButton(
               icon: Icon(_loginPassVisible ? Icons.visibility_off : Icons.visibility),
@@ -217,10 +218,10 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             value: _rememberMe,
             onChanged: _loading ? null : (v) => setState(() => _rememberMe = v ?? true),
           ),
-          const Expanded(child: Text('Angemeldet bleiben')),
+          Expanded(child: Text(AppStrings.tr('remember_me'))),
           TextButton(
             onPressed: _loading ? null : _forgotPassword,
-            child: const Text('Passwort vergessen?'),
+            child: Text(AppStrings.tr('forgot_password')),
           ),
         ]),
         const SizedBox(height: 8),
@@ -228,7 +229,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           width: double.infinity,
           child: FilledButton(
             onPressed: _loading ? null : _login,
-            child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Anmelden'),
+            child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(AppStrings.tr('login_tab')),
           ),
         ),
       ]),
@@ -241,13 +242,13 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       child: Column(children: [
         TextField(
           controller: _regNameCtrl,
-          decoration: const InputDecoration(labelText: 'Name', prefixIcon: Icon(Icons.person_outlined)),
+          decoration: InputDecoration(labelText: AppStrings.tr('name'), prefixIcon: const Icon(Icons.person_outlined)),
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 10),
         TextField(
           controller: _regEmailCtrl,
-          decoration: const InputDecoration(labelText: 'E-Mail', prefixIcon: Icon(Icons.email_outlined)),
+          decoration: InputDecoration(labelText: AppStrings.tr('email_field'), prefixIcon: const Icon(Icons.email_outlined)),
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
         ),
@@ -255,7 +256,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         TextField(
           controller: _regPassCtrl,
           decoration: InputDecoration(
-            labelText: 'Passwort (min. 6 Zeichen)',
+            labelText: AppStrings.tr('password_min_length'),
             prefixIcon: const Icon(Icons.lock_outlined),
             suffixIcon: IconButton(
               icon: Icon(_regPassVisible ? Icons.visibility_off : Icons.visibility),
@@ -268,7 +269,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         const SizedBox(height: 10),
         TextField(
           controller: _regPass2Ctrl,
-          decoration: const InputDecoration(labelText: 'Passwort wiederholen', prefixIcon: Icon(Icons.lock_outlined)),
+          decoration: InputDecoration(labelText: AppStrings.tr('password_repeat'), prefixIcon: const Icon(Icons.lock_outlined)),
           obscureText: !_regPassVisible,
           onSubmitted: (_) => _register(),
         ),
@@ -277,7 +278,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           width: double.infinity,
           child: FilledButton(
             onPressed: _loading ? null : _register,
-            child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Konto erstellen'),
+            child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(AppStrings.tr('create_account')),
           ),
         ),
       ]),

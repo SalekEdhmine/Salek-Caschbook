@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/category.dart';
 import '../services/pb_service.dart';
 import '../models/transaction.dart';
@@ -11,7 +12,14 @@ import '../providers/app_providers.dart';
 import '../utils/formatters.dart' show formatDate, formatTime, currencySymbol, parseFlexibleNumber;
 import 'category_management_screen.dart';
 
-const _paymentModes = ['Bargeld', 'Überweisung', 'EC-Karte', 'Kreditkarte', 'PayPal', 'Sonstige'];
+List<String> _paymentModes() => [
+      AppStrings.tr('payment_cash'),
+      AppStrings.tr('payment_transfer'),
+      AppStrings.tr('payment_ec'),
+      AppStrings.tr('payment_credit_card'),
+      AppStrings.tr('payment_paypal'),
+      AppStrings.tr('payment_other'),
+    ];
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final String bookId;
@@ -99,7 +107,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     } else if (bytes.lengthInBytes > 2 * 1024 * 1024) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF zu groß (max. 2 MB).'), backgroundColor: Colors.orange),
+          SnackBar(content: Text(AppStrings.tr('pdf_too_large')), backgroundColor: Colors.orange),
         );
       }
       return;
@@ -117,15 +125,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final categoriesAsync = ref.watch(categoriesProvider(_type));
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.existing == null ? 'Buchung hinzufügen' : 'Buchung bearbeiten')),
+      appBar: AppBar(title: Text(widget.existing == null ? AppStrings.tr('add_transaction_title') : AppStrings.tr('edit_transaction_title'))),
       body: Form(
         key: _formKey,
         child: ListView(padding: const EdgeInsets.all(16), children: [
           // Income / Expense toggle
           SegmentedButton<TransactionType>(
-            segments: const [
-              ButtonSegment(value: TransactionType.expense, label: Text('Ausgabe'),  icon: Icon(Icons.remove_circle_outline)),
-              ButtonSegment(value: TransactionType.income,  label: Text('Einnahme'), icon: Icon(Icons.add_circle_outline)),
+            segments: [
+              ButtonSegment(value: TransactionType.expense, label: Text(AppStrings.tr('expense')),  icon: const Icon(Icons.remove_circle_outline)),
+              ButtonSegment(value: TransactionType.income,  label: Text(AppStrings.tr('income')), icon: const Icon(Icons.add_circle_outline)),
             ],
             selected: {_type},
             onSelectionChanged: (s) => setState(() { _type = s.first; _selectedCategory = null; }),
@@ -135,12 +143,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           // Bezeichnung
           TextFormField(
             controller: _titleCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Bezeichnung *',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.label_outlined),
+            decoration: InputDecoration(
+              labelText: AppStrings.tr('title_field'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.label_outlined),
             ),
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Bezeichnung eingeben' : null,
+            validator: (v) => (v == null || v.trim().isEmpty) ? AppStrings.tr('title_required') : null,
           ),
           const SizedBox(height: 16),
 
@@ -149,7 +157,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             controller: _amountCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Betrag *',
+              labelText: AppStrings.tr('amount_field'),
               prefixText: '${currencySymbol(widget.currency)} ',
               border: const OutlineInputBorder(),
               suffixIcon: Icon(
@@ -158,9 +166,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ),
             ),
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Betrag eingeben';
-              if (parseFlexibleNumber(v) == null) return 'Ungültiger Betrag';
-              if (double.parse(v.replaceAll(',', '.')) <= 0) return 'Muss > 0 sein';
+              if (v == null || v.isEmpty) return AppStrings.tr('amount_required');
+              if (parseFlexibleNumber(v) == null) return AppStrings.tr('amount_invalid');
+              if (double.parse(v.replaceAll(',', '.')) <= 0) return AppStrings.tr('amount_positive');
               return null;
             },
           ),
@@ -183,7 +191,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 Expanded(
                   child: DropdownButtonFormField<Category>(
                     value: _selectedCategory,
-                    decoration: const InputDecoration(labelText: 'Kategorie *', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: AppStrings.tr('category_field'), border: const OutlineInputBorder()),
                     items: cats.map((c) => DropdownMenuItem(
                       value: c,
                       child: Row(children: [
@@ -193,12 +201,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ]),
                     )).toList(),
                     onChanged: (c) => setState(() => _selectedCategory = c),
-                    validator: (v) => v == null ? 'Kategorie wählen' : null,
+                    validator: (v) => v == null ? AppStrings.tr('category_required') : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
-                  tooltip: 'Kategorien verwalten',
+                  tooltip: AppStrings.tr('manage_categories'),
                   icon: const Icon(Icons.tune),
                   onPressed: () async {
                     await Navigator.push(context, MaterialPageRoute(
@@ -220,7 +228,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.calendar_today),
                 title: Text(formatDate(_date)),
-                subtitle: const Text('Datum'),
+                subtitle: Text(AppStrings.tr('date_label')),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(color: Colors.grey.shade400),
@@ -244,7 +252,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.access_time),
                 title: Text(formatTime(_date)),
-                subtitle: const Text('Uhrzeit'),
+                subtitle: Text(AppStrings.tr('time_label')),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(color: Colors.grey.shade400),
@@ -266,14 +274,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           // Payment mode
           DropdownButtonFormField<String>(
             value: _paymentMode,
-            decoration: const InputDecoration(
-              labelText: 'Zahlungsart (optional)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.payment_outlined),
+            decoration: InputDecoration(
+              labelText: AppStrings.tr('payment_mode_field'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.payment_outlined),
             ),
             items: [
-              const DropdownMenuItem<String>(value: null, child: Text('Keine Angabe')),
-              ..._paymentModes.map((m) => DropdownMenuItem(value: m, child: Text(m))),
+              DropdownMenuItem<String>(value: null, child: Text(AppStrings.tr('no_info'))),
+              ..._paymentModes().map((m) => DropdownMenuItem(value: m, child: Text(m))),
             ],
             onChanged: (v) => setState(() => _paymentMode = v),
           ),
@@ -282,11 +290,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           // Contact
           TextFormField(
             controller: _contactCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Kontakt (optional)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person_outline),
-              helperText: 'z.B. Lieferant, Kunde, Mitarbeiter',
+            decoration: InputDecoration(
+              labelText: AppStrings.tr('contact_field'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.person_outline),
+              helperText: AppStrings.tr('contact_helper'),
             ),
           ),
           const SizedBox(height: 16),
@@ -294,10 +302,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           // Note
           TextFormField(
             controller: _noteCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Notiz (optional)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.note_outlined),
+            decoration: InputDecoration(
+              labelText: AppStrings.tr('note_field'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.note_outlined),
             ),
             maxLines: 2,
           ),
@@ -308,8 +316,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             elevation: 0,
             child: SwitchListTile(
               secondary: const Icon(Icons.repeat),
-              title: const Text('Wiederkehrend'),
-              subtitle: const Text('Als regelmäßige Buchung markieren'),
+              title: Text(AppStrings.tr('recurring')),
+              subtitle: Text(AppStrings.tr('recurring_subtitle')),
               value: _isRecurring,
               onChanged: (v) => setState(() {
                 _isRecurring = v;
@@ -320,10 +328,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           if (_isRecurring) ...[
             const SizedBox(height: 12),
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'monthly',  label: Text('Monatlich')),
-                ButtonSegment(value: 'quarterly', label: Text('Vierteljährlich')),
-                ButtonSegment(value: 'yearly',   label: Text('Jährlich')),
+              segments: [
+                ButtonSegment(value: 'monthly',  label: Text(AppStrings.tr('monthly'))),
+                ButtonSegment(value: 'quarterly', label: Text(AppStrings.tr('quarterly'))),
+                ButtonSegment(value: 'yearly',   label: Text(AppStrings.tr('yearly'))),
               ],
               selected: {_recurrenceInterval ?? 'monthly'},
               onSelectionChanged: (s) => setState(() => _recurrenceInterval = s.first),
@@ -337,19 +345,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
           // Attachments
           Row(children: [
-            Text('Anhänge', style: Theme.of(context).textTheme.titleSmall),
+            Text(AppStrings.tr('attachments'), style: Theme.of(context).textTheme.titleSmall),
             const Spacer(),
             TextButton.icon(
               onPressed: _pickFile,
               icon: const Icon(Icons.attach_file, size: 18),
-              label: const Text('Hinzufügen'),
+              label: Text(AppStrings.tr('add')),
             ),
           ]),
           if (_attachments.isEmpty)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
-              child: Text('Kein Anhang – Foto, Bild oder PDF hochladen', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+              child: Text(AppStrings.tr('no_attachment'), style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
             )
           else
             Wrap(
@@ -375,7 +383,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             icon: _saving
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.save),
-            label: Text(_saving ? 'Speichern...' : 'Speichern'),
+            label: Text(_saving ? AppStrings.tr('saving') : AppStrings.tr('save')),
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
           ),
           const SizedBox(height: 32),
@@ -414,7 +422,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -448,7 +456,7 @@ class _AttachmentChip extends StatelessWidget {
             child: isPdf
                 ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Icon(Icons.picture_as_pdf, color: Colors.red.shade400, size: 28),
-                    const Text('PDF', style: TextStyle(fontSize: 11)),
+                    Text(AppStrings.tr('pdf'), style: const TextStyle(fontSize: 11)),
                   ])
                 : ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(_bytes, fit: BoxFit.cover)),
           ),
@@ -477,7 +485,7 @@ class _AttachmentChip extends StatelessWidget {
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.picture_as_pdf, size: 80, color: Colors.red.shade400),
                   const SizedBox(height: 12),
-                  const Text('PDF-Anhang', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(AppStrings.tr('pdf_attachment'), style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Text('${(_bytes.length / 1024).toStringAsFixed(1)} KB'),
                 ]),
@@ -486,4 +494,8 @@ class _AttachmentChip extends StatelessWidget {
       ),
     );
   }
+}
+
+extension _FirstOrNull<T> on List<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

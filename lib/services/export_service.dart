@@ -131,7 +131,7 @@ class ExportService {
 
     return [
       pw.SizedBox(height: 18),
-      pw.Text('Belege', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+      pw.Text('Receipts', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
       pw.SizedBox(height: 8),
       pw.Table(
         border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),

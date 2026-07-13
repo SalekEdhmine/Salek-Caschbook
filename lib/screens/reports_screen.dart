@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../providers/app_providers.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
@@ -62,12 +63,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   String get _rangeLabel {
     switch (_rangeMode) {
-      case _RangeMode.all: return 'Gesamter Zeitraum';
-      case _RangeMode.thisMonth: return 'Dieser Monat';
-      case _RangeMode.last3: return 'Letzte 3 Monate';
-      case _RangeMode.last6: return 'Letzte 6 Monate';
+      case _RangeMode.all: return AppStrings.tr('range_all');
+      case _RangeMode.thisMonth: return AppStrings.tr('range_this_month');
+      case _RangeMode.last3: return AppStrings.tr('range_last3');
+      case _RangeMode.last6: return AppStrings.tr('range_last6');
       case _RangeMode.custom:
-        if (_customFrom == null || _customTo == null) return 'Eigener Zeitraum';
+        if (_customFrom == null || _customTo == null) return AppStrings.tr('range_custom');
         return '${formatDate(_customFrom!)} – ${formatDate(_customTo!)}';
     }
   }
@@ -80,7 +81,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Berichte'),
+        title: Text(AppStrings.tr('reports_title')),
       ),
       body: Column(children: [
         _RangeFilterBar(
@@ -97,7 +98,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Expanded(
           child: txAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Fehler: $e')),
+            error: (e, _) => Center(child: Text('${AppStrings.tr('error')}: $e')),
             data: (allTxs) {
               final inRange = allTxs.where((t) {
                 if (range.from != null && t.date.isBefore(range.from!)) return false;
@@ -144,11 +145,11 @@ class _RangeFilterBar extends StatelessWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(children: [
-            _chip(context, 'Gesamt', _RangeMode.all),
-            _chip(context, 'Dieser Monat', _RangeMode.thisMonth),
-            _chip(context, '3 Monate', _RangeMode.last3),
-            _chip(context, '6 Monate', _RangeMode.last6),
-            _chip(context, 'Eigener Zeitraum…', _RangeMode.custom),
+            _chip(context, AppStrings.tr('chip_total'), _RangeMode.all),
+            _chip(context, AppStrings.tr('range_this_month'), _RangeMode.thisMonth),
+            _chip(context, AppStrings.tr('chip_3months'), _RangeMode.last3),
+            _chip(context, AppStrings.tr('chip_6months'), _RangeMode.last6),
+            _chip(context, AppStrings.tr('chip_custom'), _RangeMode.custom),
           ]),
         ),
       ]),
@@ -199,12 +200,12 @@ class _OverviewTab extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         child: Row(children: [
-          Expanded(child: _StatBox(label: 'Einnahmen', value: income, currency: currency, color: Colors.green.shade600)),
+          Expanded(child: _StatBox(label: AppStrings.tr('summary_total_in'), value: income, currency: currency, color: Colors.green.shade600)),
           const SizedBox(width: 8),
-          Expanded(child: _StatBox(label: 'Ausgaben', value: expense, currency: currency, color: Colors.red.shade600)),
+          Expanded(child: _StatBox(label: AppStrings.tr('summary_total_out'), value: expense, currency: currency, color: Colors.red.shade600)),
           const SizedBox(width: 8),
           Expanded(child: _StatBox(
-            label: 'Saldo', value: balance, currency: currency,
+            label: AppStrings.tr('summary_balance'), value: balance, currency: currency,
             color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
           )),
         ]),
@@ -212,13 +213,13 @@ class _OverviewTab extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(children: [
-          ChoiceChip(label: const Text('Alle'), selected: typeFilter == null, onSelected: (_) => onTypeFilterChanged(null)),
+          ChoiceChip(label: Text(AppStrings.tr('all')), selected: typeFilter == null, onSelected: (_) => onTypeFilterChanged(null)),
           const SizedBox(width: 6),
-          ChoiceChip(label: const Text('Einnahmen'), selected: typeFilter == TransactionType.income, onSelected: (_) => onTypeFilterChanged(TransactionType.income)),
+          ChoiceChip(label: Text(AppStrings.tr('income')), selected: typeFilter == TransactionType.income, onSelected: (_) => onTypeFilterChanged(TransactionType.income)),
           const SizedBox(width: 6),
-          ChoiceChip(label: const Text('Ausgaben'), selected: typeFilter == TransactionType.expense, onSelected: (_) => onTypeFilterChanged(TransactionType.expense)),
+          ChoiceChip(label: Text(AppStrings.tr('expense')), selected: typeFilter == TransactionType.expense, onSelected: (_) => onTypeFilterChanged(TransactionType.expense)),
           const Spacer(),
-          Text('${sorted.length} Buchungen', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          Text(AppStrings.tr('transactions_count').replaceAll('{count}', '${sorted.length}'), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
         ]),
       ),
       const Divider(height: 1),
@@ -227,7 +228,7 @@ class _OverviewTab extends ConsumerWidget {
             ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.receipt_long_outlined, size: 56, color: Colors.grey.shade300),
                 const SizedBox(height: 12),
-                const Text('Keine Buchungen in diesem Zeitraum'),
+                Text(AppStrings.tr('no_transactions_period')),
               ]))
             : ListView.separated(
                 itemCount: sorted.length,

@@ -466,7 +466,7 @@ class _BooksListViewState extends ConsumerState<_BooksListView> {
                   controller: _searchCtrl,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
-                    hintText: 'Bücher durchsuchen...',
+                    hintText: AppStrings.tr('books_search_hint'),
                     prefixIcon: const Icon(Icons.search, size: 20),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -482,16 +482,16 @@ class _BooksListViewState extends ConsumerState<_BooksListView> {
               const SizedBox(width: 8),
               PopupMenuButton<String>(
                 icon: Icon(_sortAsc ? Icons.sort : Icons.sort, size: 20),
-                tooltip: 'Sortieren',
+                tooltip: AppStrings.tr('sort_tooltip'),
                 itemBuilder: (_) => [
-                  PopupMenuItem(value: 'name_asc', child: Text('Name A-Z ${_sortBy == 'name' && _sortAsc ? '✓' : ''}')),
-                  PopupMenuItem(value: 'name_desc', child: Text('Name Z-A ${_sortBy == 'name' && !_sortAsc ? '✓' : ''}')),
+                  PopupMenuItem(value: 'name_asc', child: Text('${AppStrings.tr('sort_name_asc')} ${_sortBy == 'name' && _sortAsc ? '✓' : ''}')),
+                  PopupMenuItem(value: 'name_desc', child: Text('${AppStrings.tr('sort_name_desc')} ${_sortBy == 'name' && !_sortAsc ? '✓' : ''}')),
                   const PopupMenuDivider(),
-                  PopupMenuItem(value: 'balance_desc', child: Text('Höchster Saldo ${_sortBy == 'balance' && !_sortAsc ? '✓' : ''}')),
-                  PopupMenuItem(value: 'balance_asc', child: Text('Niedrigster Saldo ${_sortBy == 'balance' && _sortAsc ? '✓' : ''}')),
+                  PopupMenuItem(value: 'balance_desc', child: Text('${AppStrings.tr('sort_balance_desc')} ${_sortBy == 'balance' && !_sortAsc ? '✓' : ''}')),
+                  PopupMenuItem(value: 'balance_asc', child: Text('${AppStrings.tr('sort_balance_asc')} ${_sortBy == 'balance' && _sortAsc ? '✓' : ''}')),
                   const PopupMenuDivider(),
-                  PopupMenuItem(value: 'created_desc', child: Text('Neueste zuerst ${_sortBy == 'created' && !_sortAsc ? '✓' : ''}')),
-                  PopupMenuItem(value: 'created_asc', child: Text('Älteste zuerst ${_sortBy == 'created' && _sortAsc ? '✓' : ''}')),
+                  PopupMenuItem(value: 'created_desc', child: Text('${AppStrings.tr('sort_created_desc')} ${_sortBy == 'created' && !_sortAsc ? '✓' : ''}')),
+                  PopupMenuItem(value: 'created_asc', child: Text('${AppStrings.tr('sort_created_asc')} ${_sortBy == 'created' && _sortAsc ? '✓' : ''}')),
                 ],
                 onSelected: (v) {
                   setState(() {
@@ -507,7 +507,7 @@ class _BooksListViewState extends ConsumerState<_BooksListView> {
           if (filtered.isEmpty && query.isNotEmpty)
             SliverToBoxAdapter(child: Padding(
               padding: const EdgeInsets.all(32),
-              child: Center(child: Text('Keine Bücher gefunden', style: TextStyle(color: Colors.grey.shade600))),
+              child: Center(child: Text(AppStrings.tr('books_none_found'), style: TextStyle(color: Colors.grey.shade600))),
             )),
           if (filtered.isEmpty && query.isEmpty)
             SliverToBoxAdapter(child: _EmptyBooksNote())
@@ -661,13 +661,13 @@ class _TotalBalanceCard extends ConsumerWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Gesamt (umgerechnet)', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                  Text(AppStrings.tr('total_converted'), style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
                   Text(
                     anyLoading ? '…' : formatCurrency(total, currency: reference),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   if (anyMissingRate)
-                    Text('Für manche Bücher fehlt ein Wechselkurs – Einstellungen → Wechselkurse',
+                    Text(AppStrings.tr('missing_exchange_rate'),
                         style: TextStyle(fontSize: 11, color: Colors.orange.shade800)),
                 ]),
               ),
@@ -937,8 +937,8 @@ class _BusinessFormSheetState extends State<BusinessFormSheet> {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Dieses Bildformat wird nicht unterstützt (z.B. HEIC von iPhone). Bitte als JPG oder PNG wählen.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.tr('unsupported_image_format')),
           backgroundColor: Colors.red,
         ));
       }
@@ -1125,8 +1125,8 @@ class _BookFormSheetState extends State<_BookFormSheet> {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Dieses Bildformat wird nicht unterstützt (z.B. HEIC von iPhone). Bitte als JPG oder PNG wählen.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.tr('unsupported_image_format')),
           backgroundColor: Colors.red,
         ));
       }

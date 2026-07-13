@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/activity.dart';
 import '../services/pb_service.dart';
 import '../utils/formatters.dart';
@@ -44,7 +45,7 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Aktivitätsprotokoll nicht verfügbar: $e'),
+          content: Text(AppStrings.tr('activity_log_unavailable').replaceAll('{error}', '$e')),
           backgroundColor: Colors.red,
         ));
       }
@@ -78,13 +79,13 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Aktivitäten · ${widget.bookName}'),
+        title: Text(AppStrings.tr('activities_title').replaceAll('{book}', widget.bookName)),
       ),
       body: _activities.isEmpty && !_loading
           ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.history, size: 48, color: Colors.grey.shade300),
               const SizedBox(height: 12),
-              Text('Noch keine Aktivitäten', style: TextStyle(color: Colors.grey.shade600)),
+              Text(AppStrings.tr('no_activities_yet'), style: TextStyle(color: Colors.grey.shade600)),
             ]))
           : ListView.builder(
               controller: _scrollCtrl,
@@ -119,10 +120,10 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'gerade eben';
-    if (diff.inMinutes < 60) return 'vor ${diff.inMinutes} Min.';
-    if (diff.inHours < 24) return 'vor ${diff.inHours} Std.';
-    if (diff.inDays < 7) return 'vor ${diff.inDays} Tagen';
+    if (diff.inMinutes < 1) return AppStrings.tr('time_just_now');
+    if (diff.inMinutes < 60) return AppStrings.tr('time_minutes_ago').replaceAll('{n}', '${diff.inMinutes}');
+    if (diff.inHours < 24) return AppStrings.tr('time_hours_ago').replaceAll('{n}', '${diff.inHours}');
+    if (diff.inDays < 7) return AppStrings.tr('time_days_ago').replaceAll('{n}', '${diff.inDays}');
     return formatDate(dt);
   }
 }

@@ -20,8 +20,9 @@ class BankAccount {
   final String? name;
   final String? currency;
   final String? defaultBookId;
+  final double? balance;
 
-  const BankAccount({required this.uid, this.iban, this.name, this.currency, this.defaultBookId});
+  const BankAccount({required this.uid, this.iban, this.name, this.currency, this.defaultBookId, this.balance});
 
   factory BankAccount.fromMap(Map<String, dynamic> m) => BankAccount(
         uid: m['uid'] as String? ?? '',
@@ -29,6 +30,7 @@ class BankAccount {
         name: m['name'] as String?,
         currency: m['currency'] as String?,
         defaultBookId: m['default_book'] as String?,
+        balance: (m['balance'] as num?)?.toDouble(),
       );
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../utils/formatters.dart';
 
 class SummaryCard extends StatelessWidget {
@@ -28,7 +29,7 @@ class SummaryCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(children: [
-            Text('Kontostand',
+            Text(AppStrings.tr('summary_balance'),
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer)),
             const SizedBox(height: 4),
@@ -41,16 +42,16 @@ class SummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Row(children: [
-              Expanded(child: _StatItem(label: 'Einnahmen', value: income,  currency: currency, color: Colors.green.shade600, icon: Icons.arrow_upward)),
+              Expanded(child: _StatItem(label: AppStrings.tr('summary_total_in'), value: income,  currency: currency, color: Colors.green.shade600, icon: Icons.arrow_upward)),
               const SizedBox(width: 12),
-              Expanded(child: _StatItem(label: 'Ausgaben',  value: expense, currency: currency, color: Colors.red.shade600,   icon: Icons.arrow_downward)),
+              Expanded(child: _StatItem(label: AppStrings.tr('summary_total_out'),  value: expense, currency: currency, color: Colors.red.shade600,   icon: Icons.arrow_downward)),
             ]),
             if (onViewReports != null) ...[
               const SizedBox(height: 12),
               TextButton.icon(
                 onPressed: onViewReports,
                 icon: const Icon(Icons.bar_chart_outlined, size: 16),
-                label: const Text('BERICHTE ANZEIGEN', style: TextStyle(fontSize: 12)),
+                label: Text(AppStrings.tr('summary_view_reports'), style: const TextStyle(fontSize: 12)),
               ),
             ],
           ]),

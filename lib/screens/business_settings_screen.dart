@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
+import '../l10n/app_strings.dart';
 import '../models/business.dart';
 import '../providers/app_providers.dart';
 import '../services/pb_service.dart';
@@ -14,8 +15,17 @@ const _colors = [
   0xFF0097A7, 0xFFF57C00, 0xFFE91E63, 0xFF00897B,
 ];
 
-const _businessTypes = ['Einzelunternehmen', 'GmbH', 'UG', 'AG', 'KG', 'OHG', 'Freiberufler', 'Sonstiges'];
-const _businessCategories = ['Einzelhandel', 'Gastronomie', 'Dienstleistung', 'IT', 'Handwerk', 'Landwirtschaft', 'Freiberuf', 'Bildung', 'Gesundheit', 'Sonstiges'];
+// GmbH/UG/AG/KG/OHG sind feststehende deutsche Rechtsformen-Kürzel (wie "LLC"
+// oder "SARL" in anderen Rechtssystemen) - bewusst nicht übersetzt.
+List<String> _businessTypes() => [
+      AppStrings.tr('biz_sole_proprietorship'), 'GmbH', 'UG', 'AG', 'KG', 'OHG',
+      AppStrings.tr('biz_freelancer'), AppStrings.tr('biz_other'),
+    ];
+List<String> _businessCategories() => [
+      AppStrings.tr('biz_retail'), AppStrings.tr('biz_hospitality'), AppStrings.tr('biz_services'), 'IT',
+      AppStrings.tr('biz_trade'), AppStrings.tr('biz_agriculture'), AppStrings.tr('biz_freelance_cat'),
+      AppStrings.tr('biz_education'), AppStrings.tr('biz_health'), AppStrings.tr('biz_other'),
+    ];
 
 class BusinessSettingsScreen extends ConsumerStatefulWidget {
   final Business business;
@@ -103,12 +113,12 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
       ref.invalidate(businessesProvider);
       ref.read(selectedBusinessProvider.notifier).state = updated;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gespeichert')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('saved'))));
         Navigator.pop(context, updated);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -119,14 +129,14 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Business löschen?'),
-        content: const Text('Alle Bücher, Buchungen und Daten werden unwiderruflich gelöscht.'),
+        title: Text(AppStrings.tr('delete_business_title')),
+        content: Text(AppStrings.tr('delete_business_body')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Löschen', style: TextStyle(color: Colors.white))),
+            child: Text(AppStrings.tr('delete'), style: const TextStyle(color: Colors.white))),
         ],
       ),
     );
@@ -137,7 +147,7 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
         ref.read(selectedBusinessProvider.notifier).state = null;
         if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red));
       }
     }
   }
@@ -148,10 +158,10 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
     final pctLabel = widget.business.profileStrengthLabel;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Business-Einstellungen'), actions: [
+      appBar: AppBar(title: Text(AppStrings.tr('business_settings_title')), actions: [
         TextButton(onPressed: _saving ? null : _save, child: _saving
             ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Speichern')),
+            : Text(AppStrings.tr('save'))),
       ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
 
@@ -172,8 +182,8 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
               ),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Profilstärke', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text('$pctLabel – ${(pct * 100).toInt()}% ausgefüllt', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                Text(AppStrings.tr('profile_strength'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppStrings.tr('profile_filled').replaceAll('{label}', pctLabel).replaceAll('{pct}', '${(pct * 100).toInt()}'), style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
               ])),
             ]),
           ])),
@@ -209,24 +219,24 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
 
         TextFormField(
           controller: _nameCtrl,
-          decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.business)),
-          validator: (v) => v == null || v.trim().isEmpty ? 'Name eingeben' : null,
+          decoration: InputDecoration(labelText: '${AppStrings.tr('name')} *', border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.business)),
+          validator: (v) => v == null || v.trim().isEmpty ? AppStrings.tr('name_required') : null,
         ),
         const SizedBox(height: 12),
-        TextFormField(controller: _descCtrl, decoration: const InputDecoration(labelText: 'Beschreibung', border: OutlineInputBorder(), prefixIcon: Icon(Icons.description)), maxLines: 2),
+        TextFormField(controller: _descCtrl, decoration: InputDecoration(labelText: AppStrings.tr('description'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.description)), maxLines: 2),
         const SizedBox(height: 12),
 
         // Currency
         DropdownButtonFormField<String>(
           value: _currency,
-          decoration: const InputDecoration(labelText: 'Währung', border: OutlineInputBorder(), prefixIcon: Icon(Icons.monetization_on_outlined)),
+          decoration: InputDecoration(labelText: AppStrings.tr('currency'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.monetization_on_outlined)),
           items: ['EUR', 'USD', 'GBP', 'CHF', 'TRY', 'INR', 'DZD', 'MAD', 'SAR', 'MRU'].map((c) => DropdownMenuItem(value: c, child: Text('$c ${currencySymbol(c)}'))).toList(),
           onChanged: (v) => setState(() => _currency = v!),
         ),
         const SizedBox(height: 12),
 
         // Color picker
-        const Text('Farbe', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(AppStrings.tr('color'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 8, children: _colors.map((c) => GestureDetector(
           onTap: () => setState(() => _color = c),
@@ -244,43 +254,43 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
         // Extended business fields
         const Divider(),
         const SizedBox(height: 8),
-        Text('Geschäftsinformationen', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey.shade700)),
+        Text(AppStrings.tr('business_info'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey.shade700)),
         const SizedBox(height: 12),
 
-        TextFormField(controller: _addressCtrl, decoration: const InputDecoration(labelText: 'Adresse', border: OutlineInputBorder(), prefixIcon: Icon(Icons.location_on_outlined))),
+        TextFormField(controller: _addressCtrl, decoration: InputDecoration(labelText: AppStrings.tr('address_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.location_on_outlined))),
         const SizedBox(height: 12),
-        TextFormField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'Telefon', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone_outlined)), keyboardType: TextInputType.phone),
+        TextFormField(controller: _phoneCtrl, decoration: InputDecoration(labelText: AppStrings.tr('phone_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.phone_outlined)), keyboardType: TextInputType.phone),
         const SizedBox(height: 12),
-        TextFormField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'E-Mail', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email_outlined)), keyboardType: TextInputType.emailAddress),
+        TextFormField(controller: _emailCtrl, decoration: InputDecoration(labelText: AppStrings.tr('email_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.email_outlined)), keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 12),
 
         DropdownButtonFormField<String>(
           value: _businessType,
-          decoration: const InputDecoration(labelText: 'Geschäftstyp', border: OutlineInputBorder(), prefixIcon: Icon(Icons.category_outlined)),
-          items: [const DropdownMenuItem(value: null, child: Text('Nicht angegeben')), ..._businessTypes.map((t) => DropdownMenuItem(value: t, child: Text(t)))],
+          decoration: InputDecoration(labelText: AppStrings.tr('business_type_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.category_outlined)),
+          items: [DropdownMenuItem(value: null, child: Text(AppStrings.tr('not_specified'))), ..._businessTypes().map((t) => DropdownMenuItem(value: t, child: Text(t)))],
           onChanged: (v) => setState(() => _businessType = v),
         ),
         const SizedBox(height: 12),
 
         DropdownButtonFormField<String>(
           value: _businessCategory,
-          decoration: const InputDecoration(labelText: 'Branche', border: OutlineInputBorder(), prefixIcon: Icon(Icons.grid_view_outlined)),
-          items: [const DropdownMenuItem(value: null, child: Text('Nicht angegeben')), ..._businessCategories.map((c) => DropdownMenuItem(value: c, child: Text(c)))],
+          decoration: InputDecoration(labelText: AppStrings.tr('business_category_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.grid_view_outlined)),
+          items: [DropdownMenuItem(value: null, child: Text(AppStrings.tr('not_specified'))), ..._businessCategories().map((c) => DropdownMenuItem(value: c, child: Text(c)))],
           onChanged: (v) => setState(() => _businessCategory = v),
         ),
         const SizedBox(height: 12),
 
         DropdownButtonFormField<String>(
           value: _registrationType,
-          decoration: const InputDecoration(labelText: 'Registrierungstyp', border: OutlineInputBorder(), prefixIcon: Icon(Icons.assignment_outlined)),
-          items: [const DropdownMenuItem(value: null, child: Text('Nicht angegeben')), ..._businessTypes.map((t) => DropdownMenuItem(value: t, child: Text(t)))],
+          decoration: InputDecoration(labelText: AppStrings.tr('registration_type_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.assignment_outlined)),
+          items: [DropdownMenuItem(value: null, child: Text(AppStrings.tr('not_specified'))), ..._businessTypes().map((t) => DropdownMenuItem(value: t, child: Text(t)))],
           onChanged: (v) => setState(() => _registrationType = v),
         ),
         const SizedBox(height: 12),
 
         TextFormField(
           initialValue: _employeeCount?.toString() ?? '',
-          decoration: const InputDecoration(labelText: 'Mitarbeiterzahl', border: OutlineInputBorder(), prefixIcon: Icon(Icons.people_outline), helperText: 'Optional'),
+          decoration: InputDecoration(labelText: AppStrings.tr('employee_count_field'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.people_outline), helperText: AppStrings.tr('optional')),
           keyboardType: TextInputType.number,
           onChanged: (v) => setState(() => _employeeCount = int.tryParse(v)),
         ),
@@ -289,11 +299,11 @@ class _BusinessSettingsScreenState extends ConsumerState<BusinessSettingsScreen>
         // Danger zone
         const Divider(),
         const SizedBox(height: 8),
-        Text('Gefahrenzone', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.red.shade700)),
+        Text(AppStrings.tr('danger_zone'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.red.shade700)),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           icon: const Icon(Icons.delete_forever_outlined, color: Colors.red),
-          label: const Text('Business löschen', style: TextStyle(color: Colors.red)),
+          label: Text(AppStrings.tr('delete_business_button'), style: const TextStyle(color: Colors.red)),
           style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red.shade200)),
           onPressed: _deleteBusiness,
         ),

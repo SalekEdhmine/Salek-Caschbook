@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/member.dart';
 import '../models/book.dart';
 import '../services/pb_service.dart';
@@ -22,7 +23,7 @@ class MembersScreen extends ConsumerWidget {
 
     final body = membersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Fehler: $e')),
+        error: (e, _) => Center(child: Text('${AppStrings.tr('error')}: $e')),
         data: (members) {
           if (members.isEmpty) {
             return Center(child: Column(
@@ -30,9 +31,9 @@ class MembersScreen extends ConsumerWidget {
               children: [
                 Icon(Icons.group_outlined, size: 64, color: Colors.grey.shade300),
                 const SizedBox(height: 12),
-                const Text('Noch keine Mitglieder', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(AppStrings.tr('no_members_title'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                Text('Lade Personen ein, um dieses Buch\ngemeinsam zu verwalten.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+                Text(AppStrings.tr('no_members_body'), textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
               ],
             ));
           }
@@ -50,12 +51,12 @@ class MembersScreen extends ConsumerWidget {
       );
 
     return Scaffold(
-      appBar: showAppBar ? AppBar(title: Text('Mitglieder – ${book.name}')) : null,
+      appBar: showAppBar ? AppBar(title: Text(AppStrings.tr('members_title').replaceAll('{book}', book.name))) : null,
       body: body,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showMemberForm(context, ref, null),
         icon: const Icon(Icons.person_add),
-        label: const Text('Mitglied einladen'),
+        label: Text(AppStrings.tr('invite_member')),
       ),
     );
   }
@@ -83,13 +84,13 @@ class MembersScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('${m.name} entfernen?'),
+        title: Text(AppStrings.tr('remove_member_confirm').replaceAll('{name}', m.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Entfernen'),
+            child: Text(AppStrings.tr('remove')),
           ),
         ],
       ),
@@ -138,8 +139,8 @@ class _MemberTile extends StatelessWidget {
             ),
             PopupMenuButton(
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'edit',   child: ListTile(leading: Icon(Icons.edit),                                                title: Text('Rolle ändern'))),
-                const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.remove_circle_outline, color: Colors.red), title: Text('Entfernen', style: TextStyle(color: Colors.red)))),
+                PopupMenuItem(value: 'edit',   child: ListTile(leading: const Icon(Icons.edit),                                                title: Text(AppStrings.tr('change_role')))),
+                PopupMenuItem(value: 'delete', child: ListTile(leading: const Icon(Icons.remove_circle_outline, color: Colors.red), title: Text(AppStrings.tr('remove'), style: const TextStyle(color: Colors.red)))),
               ],
               onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
             ),
@@ -190,24 +191,24 @@ class _MemberFormState extends State<_MemberForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.existing == null ? 'Mitglied einladen' : 'Rolle bearbeiten',
+          Text(widget.existing == null ? AppStrings.tr('invite_member') : AppStrings.tr('edit_role'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           TextField(
             controller: _nameCtrl,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppStrings.tr('name'), border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _emailCtrl,
-            decoration: const InputDecoration(labelText: 'E-Mail', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppStrings.tr('email_field'), border: const OutlineInputBorder()),
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<MemberRole>(
             value: _role,
-            decoration: const InputDecoration(labelText: 'Rolle', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppStrings.tr('role_field'), border: const OutlineInputBorder()),
             items: MemberRole.values.map((r) => DropdownMenuItem(
               value: r,
               child: Column(
@@ -225,7 +226,7 @@ class _MemberFormState extends State<_MemberForm> {
           FilledButton(
             onPressed: _saving ? null : _save,
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-            child: Text(_saving ? 'Speichern...' : 'Speichern'),
+            child: Text(_saving ? AppStrings.tr('saving') : AppStrings.tr('save')),
           ),
         ],
       ),

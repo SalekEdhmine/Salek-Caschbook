@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 class Activity {
   final String? id;
   final String bookId;
@@ -35,19 +37,19 @@ class Activity {
 
   String get actionLabel {
     switch (action) {
-      case 'created': return 'erstellt';
-      case 'updated': return 'bearbeitet';
-      case 'deleted': return 'gelöscht';
+      case 'created': return AppStrings.tr('activity_created');
+      case 'updated': return AppStrings.tr('activity_updated');
+      case 'deleted': return AppStrings.tr('activity_deleted');
       default: return action;
     }
   }
 
   String get entityLabel {
     switch (entityType) {
-      case 'transaction': return 'Buchung';
-      case 'book':        return 'Buch';
-      case 'member':      return 'Mitglied';
-      case 'category':    return 'Kategorie';
+      case 'transaction': return AppStrings.tr('entity_transaction');
+      case 'book':        return AppStrings.tr('entity_book');
+      case 'member':      return AppStrings.tr('entity_member');
+      case 'category':    return AppStrings.tr('entity_category');
       default: return entityType;
     }
   }

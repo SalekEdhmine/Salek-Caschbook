@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../utils/formatters.dart';
@@ -57,7 +58,7 @@ class TransactionListTile extends StatelessWidget {
         title: Row(children: [
           Expanded(
             child: Text(
-              transaction.title.isNotEmpty ? transaction.title : (transaction.categoryName ?? 'Unbekannt'),
+              transaction.title.isNotEmpty ? transaction.title : (transaction.categoryName ?? AppStrings.tr('unknown')),
               style: const TextStyle(fontWeight: FontWeight.w500),
               overflow: TextOverflow.ellipsis,
             ),
@@ -77,11 +78,11 @@ class TransactionListTile extends StatelessWidget {
             padding: EdgeInsets.zero,
             iconSize: 18,
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'edit',        child: ListTile(leading: Icon(Icons.edit_outlined),                                                 title: Text('Bearbeiten'),      dense: true)),
-              const PopupMenuItem(value: 'detail',      child: ListTile(leading: Icon(Icons.open_in_new_outlined),                                          title: Text('Details'),         dense: true)),
+              PopupMenuItem(value: 'edit',        child: ListTile(leading: const Icon(Icons.edit_outlined),                                                 title: Text(AppStrings.tr('edit')),      dense: true)),
+              PopupMenuItem(value: 'detail',      child: ListTile(leading: const Icon(Icons.open_in_new_outlined),                                          title: Text(AppStrings.tr('details')),         dense: true)),
               if (hasAttachments)
-                const PopupMenuItem(value: 'attachments', child: ListTile(leading: Icon(Icons.attach_file),                                                 title: Text('Anhänge'),         dense: true)),
-              const PopupMenuItem(value: 'delete',      child: ListTile(leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Löschen', style: TextStyle(color: Colors.red)), dense: true)),
+                PopupMenuItem(value: 'attachments', child: ListTile(leading: const Icon(Icons.attach_file),                                                 title: Text(AppStrings.tr('attachments')),         dense: true)),
+              PopupMenuItem(value: 'delete',      child: ListTile(leading: const Icon(Icons.delete_outline, color: Colors.red), title: Text(AppStrings.tr('delete'), style: const TextStyle(color: Colors.red)), dense: true)),
             ],
             onSelected: (v) {
               if (v == 'edit')        onEdit?.call();
@@ -101,7 +102,7 @@ class TransactionListTile extends StatelessWidget {
       builder: (_) => Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          const Text('Anhänge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(AppStrings.tr('attachments'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, children: transaction.attachments.map((raw) {
             final ext   = raw.split(':').first.toLowerCase();
@@ -117,9 +118,9 @@ class TransactionListTile extends StatelessWidget {
                   color: isPdf ? Colors.red.shade50 : null,
                 ),
                 child: isPdf
-                    ? const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.picture_as_pdf, color: Colors.red),
-                        Text('PDF', style: TextStyle(fontSize: 11)),
+                    ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        Text(AppStrings.tr('pdf'), style: const TextStyle(fontSize: 11)),
                       ])
                     : ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(bytes, fit: BoxFit.cover)),
               ),
@@ -203,7 +204,7 @@ class _Subtitle extends StatelessWidget {
           const Spacer(),
           if (balance != null)
             Text(
-              'Saldo: ${formatCurrency(balance!, currency: currency)}',
+              AppStrings.tr('balance_label').replaceAll('{value}', formatCurrency(balance!, currency: currency)),
               style: TextStyle(fontSize: 11, color: balance! < 0 ? Colors.red.shade600 : Colors.grey.shade600, fontWeight: FontWeight.w500),
             ),
         ]),

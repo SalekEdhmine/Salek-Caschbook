@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../services/admin_service.dart';
 
 class AdminPanelScreen extends StatefulWidget {
@@ -60,7 +61,7 @@ class _AdminLoginViewState extends State<_AdminLoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin-Panel')),
+      appBar: AppBar(title: Text(AppStrings.tr('admin_panel_title'))),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -69,20 +70,20 @@ class _AdminLoginViewState extends State<_AdminLoginView> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.admin_panel_settings_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 12),
-              const Text('Admin-Zugang', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(AppStrings.tr('admin_access'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              Text('Separater Login mit deinen PocketBase-Admin-Zugangsdaten',
+              Text(AppStrings.tr('admin_access_sub'),
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600), textAlign: TextAlign.center),
               const SizedBox(height: 24),
               TextField(
                 controller: _emailCtrl,
-                decoration: const InputDecoration(labelText: 'Admin-E-Mail', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email_outlined)),
+                decoration: InputDecoration(labelText: AppStrings.tr('admin_email'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.email_outlined)),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _passCtrl,
-                decoration: const InputDecoration(labelText: 'Admin-Passwort', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_outlined)),
+                decoration: InputDecoration(labelText: AppStrings.tr('admin_password'), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.lock_outlined)),
                 obscureText: true,
                 onSubmitted: (_) => _login(),
               ),
@@ -95,7 +96,7 @@ class _AdminLoginViewState extends State<_AdminLoginView> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _loading ? null : _login,
-                  child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Anmelden'),
+                  child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppStrings.tr('login_tab')),
                 ),
               ),
             ]),
@@ -127,19 +128,19 @@ class _AdminDashboardState extends State<_AdminDashboard> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin-Panel'),
+        title: Text(AppStrings.tr('admin_panel_title')),
         actions: [
-          IconButton(icon: const Icon(Icons.logout), tooltip: 'Admin-Logout', onPressed: widget.onLogout),
+          IconButton(icon: const Icon(Icons.logout), tooltip: AppStrings.tr('admin_logout_tooltip'), onPressed: widget.onLogout),
         ],
       ),
       body: tabs[_tab],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Übersicht'),
-          NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'Nutzer'),
-          NavigationDestination(icon: Icon(Icons.backup_outlined), selectedIcon: Icon(Icons.backup), label: 'Backups'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.dashboard_outlined), selectedIcon: const Icon(Icons.dashboard), label: AppStrings.tr('nav_overview')),
+          NavigationDestination(icon: const Icon(Icons.people_outline), selectedIcon: const Icon(Icons.people), label: AppStrings.tr('nav_users')),
+          NavigationDestination(icon: const Icon(Icons.backup_outlined), selectedIcon: const Icon(Icons.backup), label: AppStrings.tr('nav_backups')),
         ],
       ),
     );
@@ -181,11 +182,11 @@ class _StatsTabState extends State<_StatsTab> {
         crossAxisSpacing: 12,
         childAspectRatio: 1.3,
         children: [
-          _StatCard(label: 'Nutzer', value: s['users'] ?? 0, icon: Icons.people, color: Colors.blue),
-          _StatCard(label: 'Businesses', value: s['businesses'] ?? 0, icon: Icons.business, color: Colors.purple),
-          _StatCard(label: 'Bücher', value: s['books'] ?? 0, icon: Icons.menu_book, color: Colors.teal),
-          _StatCard(label: 'Buchungen', value: s['transactions'] ?? 0, icon: Icons.receipt_long, color: Colors.orange),
-          _StatCard(label: 'Mitglieder', value: s['members'] ?? 0, icon: Icons.group, color: Colors.green),
+          _StatCard(label: AppStrings.tr('stat_users'), value: s['users'] ?? 0, icon: Icons.people, color: Colors.blue),
+          _StatCard(label: AppStrings.tr('stat_businesses'), value: s['businesses'] ?? 0, icon: Icons.business, color: Colors.purple),
+          _StatCard(label: AppStrings.tr('stat_books'), value: s['books'] ?? 0, icon: Icons.menu_book, color: Colors.teal),
+          _StatCard(label: AppStrings.tr('stat_transactions'), value: s['transactions'] ?? 0, icon: Icons.receipt_long, color: Colors.orange),
+          _StatCard(label: AppStrings.tr('stat_members'), value: s['members'] ?? 0, icon: Icons.group, color: Colors.green),
         ],
       ),
     );
@@ -239,11 +240,11 @@ class _UsersTabState extends State<_UsersTab> {
     final newPass = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Neues Passwort für ${user['email']}'),
-        content: TextField(controller: ctrl, decoration: const InputDecoration(labelText: 'Neues Passwort (mind. 8 Zeichen)'), obscureText: true),
+        title: Text(AppStrings.tr('new_password_for').replaceAll('{email}', user['email'] as String? ?? '')),
+        content: TextField(controller: ctrl, decoration: InputDecoration(labelText: AppStrings.tr('new_password_min')), obscureText: true),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
-          FilledButton(onPressed: () => Navigator.pop(context, ctrl.text), child: const Text('Setzen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, ctrl.text), child: Text(AppStrings.tr('set'))),
         ],
       ),
     );
@@ -251,7 +252,7 @@ class _UsersTabState extends State<_UsersTab> {
     final ok = await AdminService.instance.setUserPassword(user['id'] as String, newPass);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ok ? 'Passwort gesetzt' : 'Fehlgeschlagen'),
+        content: Text(ok ? AppStrings.tr('password_set') : AppStrings.tr('failed')),
         backgroundColor: ok ? Colors.green : Colors.red,
       ));
     }
@@ -261,11 +262,11 @@ class _UsersTabState extends State<_UsersTab> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('"${user['email']}" löschen?'),
-        content: const Text('Der Nutzer und alle zugehörigen Daten werden serverseitig gelöscht. Das kann nicht rückgängig gemacht werden.'),
+        title: Text(AppStrings.tr('delete_user_confirm').replaceAll('{email}', user['email'] as String? ?? '')),
+        content: Text(AppStrings.tr('delete_user_body')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-          FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () => Navigator.pop(context, true), child: const Text('Löschen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () => Navigator.pop(context, true), child: Text(AppStrings.tr('delete'))),
         ],
       ),
     );
@@ -274,7 +275,7 @@ class _UsersTabState extends State<_UsersTab> {
     if (success) _load();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success ? 'Nutzer gelöscht' : 'Fehlgeschlagen'),
+        content: Text(success ? AppStrings.tr('user_deleted') : AppStrings.tr('failed')),
         backgroundColor: success ? Colors.green : Colors.red,
       ));
     }
@@ -283,7 +284,7 @@ class _UsersTabState extends State<_UsersTab> {
   @override
   Widget build(BuildContext context) {
     if (_users == null) return const Center(child: CircularProgressIndicator());
-    if (_users!.isEmpty) return const Center(child: Text('Keine Nutzer'));
+    if (_users!.isEmpty) return Center(child: Text(AppStrings.tr('no_users')));
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.separated(
@@ -294,12 +295,12 @@ class _UsersTabState extends State<_UsersTab> {
           final u = _users![i];
           return ListTile(
             leading: CircleAvatar(child: Text((u['name'] as String? ?? u['email'] as String? ?? '?')[0].toUpperCase())),
-            title: Text(u['name'] as String? ?? '(kein Name)'),
+            title: Text(u['name'] as String? ?? AppStrings.tr('no_name_paren')),
             subtitle: Text(u['email'] as String? ?? ''),
             trailing: PopupMenuButton<String>(
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'reset', child: ListTile(leading: Icon(Icons.lock_reset), title: Text('Passwort setzen'))),
-                const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Löschen', style: TextStyle(color: Colors.red)))),
+                PopupMenuItem(value: 'reset', child: ListTile(leading: const Icon(Icons.lock_reset), title: Text(AppStrings.tr('set_password_menu')))),
+                PopupMenuItem(value: 'delete', child: ListTile(leading: const Icon(Icons.delete_outline, color: Colors.red), title: Text(AppStrings.tr('delete'), style: const TextStyle(color: Colors.red)))),
               ],
               onSelected: (v) => v == 'reset' ? _resetPassword(u) : _deleteUser(u),
             ),
@@ -337,7 +338,7 @@ class _BackupsTabState extends State<_BackupsTab> {
     if (mounted) {
       setState(() => _creating = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ok ? 'Backup erstellt' : 'Fehlgeschlagen'),
+        content: Text(ok ? AppStrings.tr('backup_created') : AppStrings.tr('failed')),
         backgroundColor: ok ? Colors.green : Colors.red,
       ));
       if (ok) _load();
@@ -348,10 +349,10 @@ class _BackupsTabState extends State<_BackupsTab> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('"$key" löschen?'),
+        title: Text(AppStrings.tr('delete_backup_confirm').replaceAll('{key}', key)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-          FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () => Navigator.pop(context, true), child: const Text('Löschen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.red), onPressed: () => Navigator.pop(context, true), child: Text(AppStrings.tr('delete'))),
         ],
       ),
     );
@@ -363,13 +364,13 @@ class _BackupsTabState extends State<_BackupsTab> {
   void _download(String key) {
     final url = AdminService.instance.backupDownloadUrl(key);
     showDialog(context: context, builder: (_) => AlertDialog(
-      title: const Text('Backup herunterladen'),
+      title: Text(AppStrings.tr('download_backup_title')),
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Link kopieren und im Browser öffnen (lädt die Backup-Datei herunter):', style: TextStyle(fontSize: 13)),
+        Text(AppStrings.tr('download_backup_body'), style: const TextStyle(fontSize: 13)),
         const SizedBox(height: 8),
         SelectableText(url, style: const TextStyle(fontSize: 12)),
       ]),
-      actions: [FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Schließen'))],
+      actions: [FilledButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.tr('close')))],
     ));
   }
 
@@ -383,7 +384,7 @@ class _BackupsTabState extends State<_BackupsTab> {
           child: FilledButton.icon(
             onPressed: _creating ? null : _create,
             icon: _creating ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.add),
-            label: Text(_creating ? 'Wird erstellt…' : 'Neues Backup erstellen'),
+            label: Text(_creating ? AppStrings.tr('creating_backup') : AppStrings.tr('create_new_backup')),
           ),
         ),
       ),
@@ -391,7 +392,7 @@ class _BackupsTabState extends State<_BackupsTab> {
         child: _backups == null
             ? const Center(child: CircularProgressIndicator())
             : _backups!.isEmpty
-                ? const Center(child: Text('Noch keine Backups'))
+                ? Center(child: Text(AppStrings.tr('no_backups_yet')))
                 : RefreshIndicator(
                     onRefresh: _load,
                     child: ListView.separated(

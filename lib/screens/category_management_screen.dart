@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/app_strings.dart';
 import '../models/category.dart';
 import '../providers/app_providers.dart';
 import '../services/pb_service.dart';
@@ -38,8 +39,8 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kategorien verwalten'),
-        bottom: TabBar(controller: _tabs, tabs: const [Tab(text: 'Ausgaben'), Tab(text: 'Einnahmen')]),
+        title: Text(AppStrings.tr('manage_categories')),
+        bottom: TabBar(controller: _tabs, tabs: [Tab(text: AppStrings.tr('summary_total_out')), Tab(text: AppStrings.tr('summary_total_in'))]),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showForm(
@@ -47,7 +48,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           defaultType: _tabs.index == 0 ? TransactionType.expense : TransactionType.income,
         ),
         icon: const Icon(Icons.add),
-        label: const Text('Kategorie'),
+        label: Text(AppStrings.tr('category')),
       ),
       body: TabBarView(controller: _tabs, children: [
         _CategoryList(type: TransactionType.expense, onRefresh: _refresh),
@@ -88,7 +89,7 @@ class _CategoryList extends ConsumerWidget {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Icon(Icons.category_outlined, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
-              Text('Keine ${type == TransactionType.expense ? "Ausgaben" : "Einnahmen"}-Kategorien'),
+              Text(AppStrings.tr('no_category_of_type').replaceAll('{type}', type == TransactionType.expense ? AppStrings.tr('summary_total_out') : AppStrings.tr('summary_total_in'))),
             ]),
           );
         }
@@ -104,7 +105,7 @@ class _CategoryList extends ConsumerWidget {
                 child: Icon(_iconData(cat.icon), color: color, size: 20),
               ),
               title: Text(cat.name),
-              subtitle: Text(type == TransactionType.expense ? 'Ausgabe' : 'Einnahme',
+              subtitle: Text(type == TransactionType.expense ? AppStrings.tr('expense') : AppStrings.tr('income'),
                   style: TextStyle(color: color, fontSize: 12)),
               trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                 IconButton(
@@ -139,11 +140,11 @@ class _CategoryList extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Kategorie löschen?'),
-        content: Text('"${cat.name}" wird gelöscht. Bestehende Buchungen behalten die Kategorie-ID.'),
+        title: Text(AppStrings.tr('delete_category_title')),
+        content: Text(AppStrings.tr('delete_category_body').replaceAll('{name}', cat.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Löschen')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppStrings.tr('cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: Text(AppStrings.tr('delete'))),
         ],
       ),
     );
@@ -217,25 +218,25 @@ class _CategoryFormState extends State<_CategoryForm> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(widget.existing == null ? 'Neue Kategorie' : 'Kategorie bearbeiten',
+        Text(widget.existing == null ? AppStrings.tr('new_category') : AppStrings.tr('edit_category'),
             style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
         TextField(
           controller: _nameCtrl,
-          decoration: const InputDecoration(labelText: 'Name', prefixIcon: Icon(Icons.label_outlined)),
+          decoration: InputDecoration(labelText: AppStrings.tr('name'), prefixIcon: const Icon(Icons.label_outlined)),
           autofocus: true,
         ),
         const SizedBox(height: 12),
         SegmentedButton<TransactionType>(
-          segments: const [
-            ButtonSegment(value: TransactionType.expense, label: Text('Ausgabe'), icon: Icon(Icons.arrow_downward)),
-            ButtonSegment(value: TransactionType.income,  label: Text('Einnahme'), icon: Icon(Icons.arrow_upward)),
+          segments: [
+            ButtonSegment(value: TransactionType.expense, label: Text(AppStrings.tr('expense')), icon: const Icon(Icons.arrow_downward)),
+            ButtonSegment(value: TransactionType.income,  label: Text(AppStrings.tr('income')), icon: const Icon(Icons.arrow_upward)),
           ],
           selected: {_type},
           onSelectionChanged: (s) => setState(() => _type = s.first),
         ),
         const SizedBox(height: 16),
-        Text('Farbe', style: Theme.of(context).textTheme.labelMedium),
+        Text(AppStrings.tr('color'), style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 8, children: _colorOptions.map((c) {
           final selected = _color == c;
@@ -253,7 +254,7 @@ class _CategoryFormState extends State<_CategoryForm> {
           );
         }).toList()),
         const SizedBox(height: 16),
-        Text('Icon', style: Theme.of(context).textTheme.labelMedium),
+        Text(AppStrings.tr('icon_label'), style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 8, children: categoryIconMap.entries.map((e) {
           final selected = _icon == e.key;
@@ -275,7 +276,7 @@ class _CategoryFormState extends State<_CategoryForm> {
           width: double.infinity,
           child: FilledButton(
             onPressed: _save,
-            child: Text(widget.existing == null ? 'Erstellen' : 'Speichern'),
+            child: Text(widget.existing == null ? AppStrings.tr('create') : AppStrings.tr('save')),
           ),
         ),
       ]),

@@ -29,12 +29,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           setState(() => _index = 1);
           ref.invalidate(bankConnectionsProvider);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bank erfolgreich verbunden'), backgroundColor: Colors.green),
+            SnackBar(content: Text(AppStrings.tr('bank_connected_snackbar')), backgroundColor: Colors.green),
           );
         } else if (bankResult == 'error') {
           setState(() => _index = 1);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bankverbindung fehlgeschlagen'), backgroundColor: Colors.red),
+            SnackBar(content: Text(AppStrings.tr('bank_connect_failed_snackbar')), backgroundColor: Colors.red),
           );
         }
       });

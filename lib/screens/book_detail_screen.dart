@@ -99,15 +99,15 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
           itemBuilder: (_) => [
             PopupMenuItem(value: 'pdf',      child: ListTile(leading: const Icon(Icons.picture_as_pdf_outlined), title: Text(AppStrings.tr('export_pdf')))),
             PopupMenuItem(value: 'excel',    child: ListTile(leading: const Icon(Icons.table_chart_outlined),    title: Text(AppStrings.tr('export_excel')))),
-            const PopupMenuItem(value: 'csv', child: ListTile(leading: Icon(Icons.description_outlined),         title: Text('Als CSV exportieren'))),
+            PopupMenuItem(value: 'csv', child: ListTile(leading: const Icon(Icons.description_outlined),         title: Text(AppStrings.tr('export_csv')))),
             PopupMenuItem(value: 'import',   child: ListTile(leading: const Icon(Icons.upload_outlined),         title: Text(AppStrings.tr('import_excel')))),
             PopupMenuItem(value: 'share',    child: ListTile(leading: const Icon(Icons.share_outlined),          title: Text(AppStrings.tr('share_book')))),
             const PopupMenuDivider(),
-            PopupMenuItem(value: 'activity', child: ListTile(leading: const Icon(Icons.history),                  title: const Text('Aktivitäten'))),
-            const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_outline),              title: Text('Papierkorb'))),
+            PopupMenuItem(value: 'activity', child: ListTile(leading: const Icon(Icons.history),                  title: Text(AppStrings.tr('activity_log')))),
+            PopupMenuItem(value: 'trash', child: ListTile(leading: const Icon(Icons.delete_outline),              title: Text(AppStrings.tr('trash')))),
             const PopupMenuDivider(),
-            const PopupMenuItem(value: 'move_book', child: ListTile(leading: Icon(Icons.drive_file_move_outlined), title: Text('Buch verschieben'))),
-            const PopupMenuItem(value: 'copy_book', child: ListTile(leading: Icon(Icons.copy_outlined),           title: Text('Buch kopieren'))),
+            PopupMenuItem(value: 'move_book', child: ListTile(leading: const Icon(Icons.drive_file_move_outlined), title: Text(AppStrings.tr('move_book')))),
+            PopupMenuItem(value: 'copy_book', child: ListTile(leading: const Icon(Icons.copy_outlined),           title: Text(AppStrings.tr('copy_book')))),
             const PopupMenuDivider(),
             PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_outlined),       title: Text(AppStrings.tr('book_settings')))),
           ],
@@ -167,7 +167,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
     if (others.isEmpty) {
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('Kein anderes Business vorhanden.')),
+          SnackBar(content: Text(AppStrings.tr('no_other_business'))),
         );
       }
       return;
@@ -179,7 +179,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
       builder: (_) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(move ? 'Wohin verschieben?' : 'Wohin kopieren?', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          child: Text(move ? AppStrings.tr('move_to_where') : AppStrings.tr('copy_to_where'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
         const Divider(height: 1),
         ...others.map((b) => ListTile(
@@ -200,7 +200,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
         final updated = _book.copyWith(businessId: target.id!);
         await PbService.instance.updateBook(updated);
         if (ctx.mounted) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Nach "${target.name}" verschoben')));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(AppStrings.tr('moved_to').replaceAll('{name}', target.name))));
           Navigator.pop(ctx);
         }
       } else {
@@ -210,12 +210,12 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
           await PbService.instance.insertTransaction(tx.copyWith(id: null, bookId: newBookId));
         }
         if (ctx.mounted) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Nach "${target.name}" kopiert (inkl. ${txs.length} Buchungen)')));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(AppStrings.tr('copied_to').replaceAll('{name}', target.name).replaceAll('{count}', '${txs.length}'))));
         }
       }
     } catch (e) {
       if (ctx.mounted) {
-        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('${AppStrings.tr('error')}: $e'), backgroundColor: Colors.red));
       }
     }
   }
@@ -396,7 +396,7 @@ class _ImportPreviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Import: ${result.preview.length} ${AppStrings.tr('nav_transactions')}'),
+      title: Text('${AppStrings.tr('import_prefix')}: ${result.preview.length} ${AppStrings.tr('nav_transactions')}'),
       content: SizedBox(
         width: 400,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -405,9 +405,9 @@ class _ImportPreviewDialog extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${result.errors.length} Warnung(en):', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+                Text(AppStrings.tr('warnings_count').replaceAll('{count}', '${result.errors.length}'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                 ...result.errors.take(3).map((e) => Text(e, style: const TextStyle(fontSize: 12))),
-                if (result.errors.length > 3) Text('… und ${result.errors.length - 3} weitere'),
+                if (result.errors.length > 3) Text(AppStrings.tr('and_more').replaceAll('{count}', '${result.errors.length - 3}')),
               ]),
             ),
             const SizedBox(height: 12),
@@ -436,7 +436,7 @@ class _ImportPreviewDialog extends StatelessWidget {
                 },
               ),
             ),
-          if (result.preview.length > 20) Text('… und ${result.preview.length - 20} weitere'),
+          if (result.preview.length > 20) Text(AppStrings.tr('and_more').replaceAll('{count}', '${result.preview.length - 20}')),
         ]),
       ),
       actions: [
@@ -707,7 +707,7 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
             child: Row(children: [
               IconButton(
                 icon: const Icon(Icons.tune),
-                tooltip: AppStrings.tr('search'),
+                tooltip: AppStrings.tr('search_title'),
                 onPressed: () => _showSearchSheet(context),
               ),
               const SizedBox(width: 4),
@@ -715,7 +715,7 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
                 icon: Icons.calendar_today_outlined,
                 label: filter.dateFrom != null || filter.dateTo != null
                     ? _buildDateRangeLabel(filter)
-                    : 'Zeitfilter',
+                    : AppStrings.tr('time_filter'),
                 highlighted: filter.dateFrom != null || filter.dateTo != null,
                 onTap: () => _showDateFilterSheet(context),
                 onClear: filter.dateFrom != null || filter.dateTo != null
@@ -728,7 +728,7 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
               const SizedBox(width: 8),
               _FilterDropdownButton(
                 icon: Icons.category_outlined,
-                label: _categoryNameFor(filter.categoryId) ?? 'Kategorie',
+                label: _categoryNameFor(filter.categoryId) ?? AppStrings.tr('category'),
                 highlighted: filter.categoryId != null,
                 onTap: () => _showCategoryFilterSheet(context),
                 onClear: filter.categoryId != null
@@ -747,23 +747,23 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
             color: Theme.of(context).colorScheme.primaryContainer,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(children: [
-              Text('${_selectedIds.length} ausgewählt',
+              Text(AppStrings.tr('selected_count').replaceAll('{count}', '${_selectedIds.length}'),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const Spacer(),
               TextButton.icon(
                 icon: const Icon(Icons.select_all, size: 18),
-                label: const Text('Alle', style: TextStyle(fontSize: 12)),
+                label: Text(AppStrings.tr('all'), style: const TextStyle(fontSize: 12)),
                 onPressed: _selectAll,
               ),
               if (_selectedIds.isNotEmpty)
                 TextButton.icon(
                   icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                  label: Text('${_selectedIds.length} löschen', style: const TextStyle(fontSize: 12, color: Colors.red)),
+                  label: Text(AppStrings.tr('delete_count').replaceAll('{count}', '${_selectedIds.length}'), style: const TextStyle(fontSize: 12, color: Colors.red)),
                   onPressed: _bulkDelete,
                 ),
               TextButton(
                 onPressed: () => setState(() { _batchMode = false; _selectedIds.clear(); }),
-                child: const Text('Fertig', style: TextStyle(fontSize: 12)),
+                child: Text(AppStrings.tr('done'), style: const TextStyle(fontSize: 12)),
               ),
             ]),
           ),
@@ -813,7 +813,9 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
                   child: Row(children: [
-                    Text('Zeige $totalItems ${totalItems == 1 ? "Eintrag" : "Einträge"}',
+                    Text(AppStrings.tr('showing_entries')
+                            .replaceAll('{count}', '$totalItems')
+                            .replaceAll('{entries}', AppStrings.tr(totalItems == 1 ? 'entry_singular' : 'entry_plural')),
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ]),
                 ),
@@ -924,8 +926,8 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('${_selectedIds.length} Buchungen löschen?'),
-        content: const Text('Wandert in den Papierkorb & kann dort wiederhergestellt werden.'),
+        title: Text(AppStrings.tr('bulk_delete_title').replaceAll('{count}', '${_selectedIds.length}')),
+        content: Text(AppStrings.tr('bulk_delete_body')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppStrings.tr('cancel'))),
           FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(AppStrings.tr('delete'))),
@@ -939,7 +941,7 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
       widget.onRefresh();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$deleted Buchungen gelöscht')),
+          SnackBar(content: Text(AppStrings.tr('bulk_deleted_snackbar').replaceAll('{count}', '$deleted'))),
         );
       }
     }
@@ -968,12 +970,12 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
           child: ListView(
             controller: scrollController,
             children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-                child: Text('Kategorie', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Text(AppStrings.tr('category'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               RadioListTile<String?>(
-                title: const Text('Alle Kategorien'), value: null, groupValue: filter.categoryId,
+                title: Text(AppStrings.tr('all_categories')), value: null, groupValue: filter.categoryId,
                 onChanged: (v) { ref.read(transactionFilterProvider(widget.book.id!).notifier).setCategory(v); _pushFilter(); Navigator.pop(context); },
               ),
               ...categories.map((c) => RadioListTile<String?>(
@@ -1001,7 +1003,7 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
       builder: (sheetCtx) => Padding(
         padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Suchen', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(AppStrings.tr('search_title'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 16),
           TextField(
             controller: _searchCtrl,
@@ -1166,7 +1168,7 @@ class _TransactionsTabState extends ConsumerState<_TransactionsTab> {
                     style: const TextStyle(fontSize: 12)),
               ]),
             )),
-            if (missing.length > 5) Text('… und ${missing.length - 5} weitere'),
+            if (missing.length > 5) Text(AppStrings.tr('and_more').replaceAll('{count}', '${missing.length - 5}')),
             const SizedBox(height: 8),
           ]),
           actions: [
@@ -1320,21 +1322,21 @@ class _NettoSaldoCard extends ConsumerWidget {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              const Text('Nettosaldo', style: TextStyle(fontSize: 13, color: Colors.grey)),
+              Text(AppStrings.tr('net_balance'), style: const TextStyle(fontSize: 13, color: Colors.grey)),
               const Spacer(),
               Text(formatCurrency(balance, currency: currency),
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             ]),
             const Divider(height: 16),
             Row(children: [
-              const Text('Gesamt Ein (+)', style: TextStyle(fontSize: 13, color: Colors.grey)),
+              Text(AppStrings.tr('total_in'), style: const TextStyle(fontSize: 13, color: Colors.grey)),
               const Spacer(),
               Text(formatCurrency(income, currency: currency),
                   style: TextStyle(fontSize: 13, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 4),
             Row(children: [
-              const Text('Gesamt Aus (-)', style: TextStyle(fontSize: 13, color: Colors.grey)),
+              Text(AppStrings.tr('total_out'), style: const TextStyle(fontSize: 13, color: Colors.grey)),
               const Spacer(),
               Text(formatCurrency(expense, currency: currency),
                   style: TextStyle(fontSize: 13, color: Colors.red.shade700, fontWeight: FontWeight.w600)),
@@ -1344,7 +1346,7 @@ class _NettoSaldoCard extends ConsumerWidget {
               child: TextButton(
                 onPressed: onViewReports,
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text('BERICHTE ANZEIGEN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, letterSpacing: 0.5)),
+                  Text(AppStrings.tr('summary_view_reports'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, letterSpacing: 0.5)),
                   const SizedBox(width: 4),
                   Icon(Icons.chevron_right, size: 16, color: Theme.of(context).colorScheme.primary),
                 ]),

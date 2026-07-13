@@ -183,7 +183,18 @@ class _ConnectionCard extends ConsumerWidget {
               leading: const Icon(Icons.credit_card),
               title: Text(acc.name?.isNotEmpty == true ? acc.name! : (acc.iban ?? acc.uid)),
               subtitle: acc.iban != null ? Text(acc.iban!) : null,
-              trailing: const Icon(Icons.chevron_right),
+              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (acc.balance != null)
+                  Text(
+                    formatCurrency(acc.balance!, currency: acc.currency ?? 'EUR'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: acc.balance! < 0 ? Colors.red.shade700 : Colors.green.shade700,
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right),
+              ]),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => BankTransactionsReviewScreen(account: acc)),

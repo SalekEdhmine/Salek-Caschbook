@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import 'auth_screen.dart';
 
 // PocketBase sends password reset emails automatically via the built-in UI.
@@ -15,17 +16,17 @@ class ResetPasswordScreen extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             const Icon(Icons.mark_email_read_outlined, size: 80, color: Colors.green),
             const SizedBox(height: 16),
-            const Text('Passwort zurücksetzen', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(AppStrings.tr('reset_password_title'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text(
-              'Bitte nutze den Link in deiner E-Mail um dein Passwort zurückzusetzen.',
+            Text(
+              AppStrings.tr('reset_password_email_body'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pushAndRemoveUntil(
                 context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false),
-              child: const Text('Zur Anmeldung'),
+              child: Text(AppStrings.tr('go_to_login')),
             ),
           ]),
         ),
