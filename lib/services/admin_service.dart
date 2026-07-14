@@ -67,6 +67,20 @@ class AdminService {
     return res.statusCode == 204 || res.statusCode == 200;
   }
 
+  /// Schickt dem angegebenen Nutzer eine Test-Mitteilung (In-App + Push an
+  /// alle seine angemeldeten Geräte). Gibt bei Erfolg die Anzahl der
+  /// angemeldeten Push-Geräte zurück, sonst -1.
+  Future<int> sendTestNotification(String userId) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/notify/admin-test'),
+      headers: _headers,
+      body: jsonEncode({'user_id': userId}),
+    );
+    if (res.statusCode != 200) return -1;
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return (data['push_devices'] as num?)?.toInt() ?? 0;
+  }
+
   Future<int> _count(String collection) async {
     final res = await http.get(
       Uri.parse('$_baseUrl/api/collections/$collection/records?perPage=1'),

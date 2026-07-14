@@ -258,6 +258,27 @@ class _UsersTabState extends State<_UsersTab> {
     }
   }
 
+  Future<void> _sendTestNotification(Map<String, dynamic> user) async {
+    final devices = await AdminService.instance.sendTestNotification(user['id'] as String);
+    if (!mounted) return;
+    if (devices < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.tr('failed')), backgroundColor: Colors.red),
+      );
+    } else if (devices == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.tr('admin_test_notify_no_devices'))),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.tr('admin_test_notify_sent').replaceAll('{count}', '$devices')),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
   Future<void> _deleteUser(Map<String, dynamic> user) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -299,10 +320,15 @@ class _UsersTabState extends State<_UsersTab> {
             subtitle: Text(u['email'] as String? ?? ''),
             trailing: PopupMenuButton<String>(
               itemBuilder: (_) => [
+                PopupMenuItem(value: 'test_notify', child: ListTile(leading: const Icon(Icons.notifications_active_outlined), title: Text(AppStrings.tr('admin_test_notify_menu')))),
                 PopupMenuItem(value: 'reset', child: ListTile(leading: const Icon(Icons.lock_reset), title: Text(AppStrings.tr('set_password_menu')))),
                 PopupMenuItem(value: 'delete', child: ListTile(leading: const Icon(Icons.delete_outline, color: Colors.red), title: Text(AppStrings.tr('delete'), style: const TextStyle(color: Colors.red)))),
               ],
-              onSelected: (v) => v == 'reset' ? _resetPassword(u) : _deleteUser(u),
+              onSelected: (v) {
+                if (v == 'test_notify') _sendTestNotification(u);
+                if (v == 'reset') _resetPassword(u);
+                if (v == 'delete') _deleteUser(u);
+              },
             ),
           );
         },
