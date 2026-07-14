@@ -28,12 +28,63 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <meta name="theme-color" content="#1976D2">
 
   <title>cashbook</title>
   <link rel="manifest" href="manifest.json">
-  <script src="push_client.js"></script>
+  <!-- defer statt blockierendem <head>-Script: darf den Seitenaufbau nie
+       verzoegern (v.a. offline, wo dieser Request sonst haengen bleiben
+       koennte) - Web Push ist ohnehin nur online nutzbar. -->
+  <script src="push_client.js" defer></script>
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #1976D2; }
+    /* Eigener Ladebildschirm statt leerer weisser Seite, waehrend
+       main.dart.js laedt (kann beim allerersten/App-Icon-Start ein paar
+       Sekunden dauern) - verschwindet automatisch beim ersten Flutter-Frame. */
+    #app-splash {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #1976D2;
+      transition: opacity 0.25s ease-out;
+    }
+    #app-splash img {
+      width: 96px; height: 96px; border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      animation: app-splash-pulse 1.6s ease-in-out infinite;
+    }
+    #app-splash .spinner {
+      margin-top: 28px; width: 32px; height: 32px;
+      border: 3px solid rgba(255,255,255,0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: app-splash-spin 0.9s linear infinite;
+    }
+    @keyframes app-splash-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.06); opacity: 0.85; }
+    }
+    @keyframes app-splash-spin {
+      to { transform: rotate(360deg); }
+    }
+    #app-splash.app-splash-hidden { opacity: 0; pointer-events: none; }
+  </style>
 </head>
 <body>
+  <div id="app-splash">
+    <img src="icons/Icon-192.png" alt="CashBook">
+    <div class="spinner"></div>
+  </div>
+  <script>
+    // Flutter Web feuert dieses Event nach dem ersten gerenderten Frame -
+    // erst dann ist wirklich etwas Sinnvolles zu sehen, das den Splash ersetzen kann.
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('app-splash');
+      if (!splash) return;
+      splash.classList.add('app-splash-hidden');
+      setTimeout(function () { splash.remove(); }, 300);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
