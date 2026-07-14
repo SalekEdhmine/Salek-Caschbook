@@ -20,10 +20,41 @@ window.getNotificationPermission = function () {
   return Notification.permission;
 };
 
+// Wartet, bis GENAU DIESE Registrierung (nicht irgendeine fuer die Seite
+// zustaendige - "/push/" hat einen anderen Scope als die App selbst, daher
+// ist navigator.serviceWorker.ready hier NICHT das Richtige und kann haengen
+// bleiben) einen aktiven Worker hat.
+function waitForActive(reg) {
+  if (reg.active) return Promise.resolve();
+  var worker = reg.installing || reg.waiting;
+  if (!worker) return Promise.resolve();
+  return new Promise(function (resolve) {
+    worker.addEventListener('statechange', function onChange() {
+      if (worker.state === 'activated' || worker.state === 'redundant') {
+        worker.removeEventListener('statechange', onChange);
+        resolve();
+      }
+    });
+  });
+}
+
+function withTimeout(promise, ms, timeoutValue) {
+  return Promise.race([
+    promise,
+    new Promise(function (resolve) { setTimeout(function () { resolve(timeoutValue); }, ms); }),
+  ]);
+}
+
 // Gibt bei Erfolg 'granted' zurueck, sonst einen sprechenden Fehlercode
 // (wird in der App als SnackBar angezeigt - ohne das koennten wir aus der
-// Ferne nie sehen, an welcher Stelle es auf einem Geraet hakt).
-window.subscribeToPush = async function (token, apiBase) {
+// Ferne nie sehen, an welcher Stelle es auf einem Geraet hakt). Die gesamte
+// Funktion hat ein Zeitlimit, damit der "Aktivieren"-Button nie fuer immer
+// haengen bleibt, egal was schiefgeht.
+window.subscribeToPush = function (token, apiBase) {
+  return withTimeout(_doSubscribe(token, apiBase), 15000, 'timeout: hat zu lange gedauert');
+};
+
+async function _doSubscribe(token, apiBase) {
   if (typeof Notification === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
     return 'unsupported';
   }
@@ -38,7 +69,7 @@ window.subscribeToPush = async function (token, apiBase) {
   var reg;
   try {
     reg = await navigator.serviceWorker.register('/push_sw.js', { scope: '/push/' });
-    await navigator.serviceWorker.ready;
+    await waitForActive(reg);
   } catch (e) {
     return 'sw-register-failed: ' + e.message;
   }
@@ -79,7 +110,7 @@ window.subscribeToPush = async function (token, apiBase) {
   }
 
   return 'granted';
-};
+}
 
 window.unsubscribeFromPush = async function (token, apiBase) {
   if (!('serviceWorker' in navigator)) return;

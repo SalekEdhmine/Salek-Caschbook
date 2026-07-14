@@ -91,16 +91,36 @@ class _PushPermissionBanner extends StatefulWidget {
 
 class _PushPermissionBannerState extends State<_PushPermissionBanner> {
   bool _loading = false;
-  // Solange wir keine erfolgreiche Serverbestätigung hatten, bleibt der
-  // Button sichtbar - auch wenn der Browser die Berechtigung schon erteilt
-  // hat (sonst gibt es keine Möglichkeit mehr, einen fehlgeschlagenen
-  // Server-Speichervorgang erneut zu versuchen).
   bool _confirmed = false;
+  // Wird auf true gesetzt, sobald der stille Hintergrund-Abgleich (siehe
+  // initState) einmal durchgelaufen ist - vorher zeigen wir noch keinen
+  // Button/Fehler an, um nicht faelschlich "nicht aktiviert" zu blitzen.
+  bool _checked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Wenn der Browser die Berechtigung schon erteilt hat, muss der Nutzer
+    // NICHT bei jedem App-Start erneut "Aktivieren" antippen - wir melden
+    // das Geraet still im Hintergrund erneut an (harmlos/idempotent, holt
+    // z.B. auch eine verlorene Server-Anmeldung nach).
+    if (PushService.instance.permissionStatus == 'granted') {
+      PushService.instance.subscribe().then((result) {
+        if (!mounted) return;
+        setState(() {
+          _checked = true;
+          _confirmed = result == 'granted';
+        });
+      });
+    } else {
+      _checked = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final status = PushService.instance.permissionStatus;
-    if (status == 'unsupported' || _confirmed) return const SizedBox.shrink();
+    if (status == 'unsupported' || !_checked || _confirmed) return const SizedBox.shrink();
 
     final denied = status == 'denied';
     return Container(

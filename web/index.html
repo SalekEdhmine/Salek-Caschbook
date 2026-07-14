@@ -49,12 +49,21 @@
       transition: opacity 0.25s ease-out;
     }
     #app-splash img {
-      width: 96px; height: 96px; border-radius: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      width: 160px; height: 160px; border-radius: 32px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
       animation: app-splash-pulse 1.6s ease-in-out infinite;
     }
+    #app-splash .welcome {
+      margin-top: 28px;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
+      padding: 0 24px;
+    }
     #app-splash .spinner {
-      margin-top: 28px; width: 32px; height: 32px;
+      margin-top: 24px; width: 28px; height: 28px;
       border: 3px solid rgba(255,255,255,0.35);
       border-top-color: #ffffff;
       border-radius: 50%;
@@ -62,7 +71,7 @@
     }
     @keyframes app-splash-pulse {
       0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.06); opacity: 0.85; }
+      50% { transform: scale(1.05); opacity: 0.9; }
     }
     @keyframes app-splash-spin {
       to { transform: rotate(360deg); }
@@ -73,9 +82,21 @@
 <body>
   <div id="app-splash">
     <img src="icons/Icon-192.png" alt="CashBook">
+    <div class="welcome" id="app-splash-text">Willkommen zurück, CashBook</div>
     <div class="spinner"></div>
   </div>
   <script>
+    (function () {
+      var texts = {
+        de: 'Willkommen zurück, CashBook',
+        en: 'Welcome back, CashBook',
+        ar: 'أهلاً بعودتك، CashBook',
+        fr: 'Bon retour, CashBook',
+      };
+      var lang = (navigator.language || 'de').slice(0, 2);
+      var el = document.getElementById('app-splash-text');
+      if (el && texts[lang]) el.textContent = texts[lang];
+    })();
     // Flutter Web feuert dieses Event nach dem ersten gerenderten Frame -
     // erst dann ist wirklich etwas Sinnvolles zu sehen, das den Splash ersetzen kann.
     window.addEventListener('flutter-first-frame', function () {
